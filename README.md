@@ -86,7 +86,7 @@ List of options that can be passed to the plugin.
 | shortcut | `string` | Keyboard shortcut displayed on the right. |
 
 ### Position
-Position oordinates are relative to the currently active window.
+Position coordinates are relative to the currently active window.
 | Option | Type | Description |
 | ------ | ---- | ----------- |
 | x | `number` | X position of the menu. |
