@@ -34,7 +34,7 @@ See ["Using a Plugin" Tauri official guide](https://tauri.app/v1/guides/features
 A vanilla JS example is provided in `examples/vanilla`. To run the example, run the following commands:
 
 ```bash
-cd examples/svelte-app
+cd examples/vanilla
 npm run tauri dev
 ```
 
