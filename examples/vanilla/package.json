@@ -10,10 +10,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@babel/standalone": "^7.22.9",
     "@tauri-apps/cli": "^1.0.0"
-  },
-  "devDependencies": {
-    "@babel/preset-env": "^7.22.9"
   }
 }
