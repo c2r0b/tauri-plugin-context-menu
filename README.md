@@ -39,7 +39,7 @@ window.addEventListener("contextmenu", (e) => {
     e.preventDefault();
 
     // Show the context menu
-    invoke("contextMenu", {
+    invoke("plugin:context_menu|show_context_menu", {
         items: [
             {
                 label: "Item 1",
