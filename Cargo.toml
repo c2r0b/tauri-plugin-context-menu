@@ -5,7 +5,7 @@ authors = [ "c2r0b" ]
 description = ""
 edition = "2021"
 rust-version = "1.59"
-exclude = ["/examples", "/assets"]
+exclude = ["/examples", "/assets", ".DS_Store", "/.github", "/.changes"]
 
 [dependencies]
 tauri = { version = "1.2.4" }
