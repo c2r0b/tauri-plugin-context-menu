@@ -27,9 +27,8 @@ struct Position {
 struct MenuItem {
     label: String,
     disabled: bool,
-    key_binding: Option<String>,
-    hotkey: Option<String>,
-    event_name: Option<String>,
+    shortcut: Option<String>,
+    event: Option<String>,
     subitems: Option<Vec<MenuItem>>,
     icon_path: Option<String>,
 }
@@ -186,29 +185,39 @@ impl<R: Runtime> ContextMenu<R>
         let menu_item: id = unsafe {
             let title = NSString::alloc(nil).init_str(&option.label);
             
-            let key_equivalent = match &option.key_binding {
-                Some(key) => NSString::alloc(nil).init_str(key),
-                None => NSString::alloc(nil).init_str(""),
+            // Parse the shortcut
+            let (key, mask) = match &option.shortcut {
+                Some(shortcut) => {
+                    let parts: Vec<&str> = shortcut.split('+').collect();
+
+                    // Default values
+                    let mut key = "";
+                    let mut mask = cocoa::appkit::NSEventModifierFlags::empty();
+
+                    for part in parts.iter() {
+                        match *part {
+                            "cmd" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask),
+                            "shift" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSShiftKeyMask),
+                            "alt" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask),
+                            "ctrl" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSControlKeyMask),
+                            // ... other modifier keys ...
+                            _ => key = *part,  // Assuming the last item or the only item without a '+' is the main key.
+                        }
+                    }
+                    
+                    (NSString::alloc(nil).init_str(key), mask)
+                }
+                None => (NSString::alloc(nil).init_str(""), cocoa::appkit::NSEventModifierFlags::empty()),
             };
-    
-            // Set the hotkey modifier
-            let mask = match &option.hotkey {
-                Some(hotkey) if hotkey == "cmd" => cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask,
-                Some(hotkey) if hotkey == "shift" => cocoa::appkit::NSEventModifierFlags::NSShiftKeyMask,
-                Some(hotkey) if hotkey == "alt" => cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask,
-                Some(hotkey) if hotkey == "ctrl" => cocoa::appkit::NSEventModifierFlags::NSControlKeyMask,
-                Some(hotkey) if hotkey == "super" => cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask,
-                Some(hotkey) if hotkey == "option" => cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask,
-                _ => cocoa::appkit::NSEventModifierFlags::empty(), // No modifier
-            };
-            let item = cocoa::appkit::NSMenuItem::alloc(nil).initWithTitle_action_keyEquivalent_(title, sel, key_equivalent);
+            
+            let item = cocoa::appkit::NSMenuItem::alloc(nil).initWithTitle_action_keyEquivalent_(title, sel, key);
             item.setKeyEquivalentModifierMask_(mask);
             
             // Set the enabled state
             item.setEnabled_(if option.disabled { NO } else { YES });
     
             // Set the represented object to the event name
-            let string = match &option.event_name {
+            let string = match &option.event {
                 Some(event_name) => NSString::alloc(nil).init_str(event_name),
                 None => NSString::alloc(nil).init_str(""),
             };

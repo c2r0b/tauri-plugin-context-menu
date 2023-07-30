@@ -7,17 +7,15 @@ window.addEventListener('contextmenu', async () => {
         {
             label: "My first item",
             disabled: false,
-            event_name: "my_first_item",
-            key_binding: "Ctrl+M",
-            hotkey: "Ctrl+M",
+            event: "my_first_item",
+            shortcut: "alt+m",
             icon_path: "assets/icons/16x16.png"
         },
         {
             label: "My second item",
             disabled: false,
-            event_name: "my_second_item",
-            key_binding: "Shift+C",
-            hotkey: "Shift+C"
+            event: "my_second_item",
+            shortcut: "cmd+C"
         },
         {
             label: "My third item",
@@ -26,9 +24,8 @@ window.addEventListener('contextmenu', async () => {
                 {
                     label: "My first subitem",
                     disabled: false,
-                    event_name: "my_first_subitem",
-                    key_binding: "Ctrl+M",
-                    hotkey: "Ctrl+M"
+                    event: "my_first_subitem",
+                    shortcut: "ctrl+m"
                 },
                 {
                     label: "My second subitem",
