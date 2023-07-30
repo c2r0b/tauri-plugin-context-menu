@@ -18,8 +18,17 @@ All non-supported listed features are intended as future development.
 | Separator        | 🔜      | ❌       | ❌        |
 
 ## Installation
-TODO  
-See ["Using a Plugin" Tauri officiale guide](https://tauri.app/v1/guides/features/plugin#using-a-plugin) to initialize the plugin.
+Crate: https://crates.io/crates/tauri-plugin-context-menu
+
+`cargo add tauri-plugin-context-menu` to add the package.
+
+Or add the following to your `Cargo.toml` for the latest unpublished version (not recommanded).
+
+```toml
+tauri-plugin-context-menu = { git = "https://github.com/c2r0b/tauri-plugin-context-menu", branch = "main" }
+```
+
+See ["Using a Plugin" Tauri official guide](https://tauri.app/v1/guides/features/plugin#using-a-plugin) to initialize the plugin.
 
 ## Run Example
 A vanilla JS example is provided in `examples/vanilla`. To run the example, run the following commands:
