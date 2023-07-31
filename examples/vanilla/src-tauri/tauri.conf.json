@@ -19,7 +19,6 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": [],
       "externalBin": [],
       "copyright": "",
       "category": "DeveloperTool",
@@ -46,6 +45,9 @@
     "allowlist": {
       "all": false,
       "dialog": {
+        "all": true
+      },
+      "path": {
         "all": true
       }
     },

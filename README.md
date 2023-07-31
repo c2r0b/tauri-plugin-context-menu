@@ -14,8 +14,9 @@ All non-supported listed features are intended as future development.
 | Disabled         | ✅      | ❌       | ❌        |
 | Callback         | ✅      | ❌       | ❌        |
 | Shortcut         | ✅      | ❌       | ❌        |
+| Separator        | ✅      | ❌       | ❌        |
+| OnClose          | ✅      | ❌       | ❌        |
 | Icon             | 🔜      | ❌       | ❌        |
-| Separator        | 🔜      | ❌       | ❌        |
 
 ## Installation
 Crate: https://crates.io/crates/tauri-plugin-context-menu
@@ -58,8 +59,11 @@ window.addEventListener("contextmenu", (e) => {
                 subitems: [
                     {
                         label: "Subitem 1",
-                        disabled: false,
+                        disabled: true,
                         event: "subitem1clicked",
+                    },
+                    {
+                        is_separator: true,
                     },
                     {
                         label: "Subitem 2",
@@ -93,6 +97,7 @@ List of options that can be passed to the plugin.
 | event | `string` | Event name to be emitted when the menu item is clicked. |
 | subitems | `MenuItem[]` | List of sub menu items to be displayed. |
 | shortcut | `string` | Keyboard shortcut displayed on the right. |
+| is_separator | `boolean` | Whether the menu item is a separator. |
 
 ### Position
 Position coordinates are relative to the currently active window.
@@ -100,3 +105,16 @@ Position coordinates are relative to the currently active window.
 | ------ | ---- | ----------- |
 | x | `number` | X position of the menu. |
 | y | `number` | Y position of the menu. |
+
+## Events
+### menuDidClose
+Emitted when the menu is closed. This event is emitted regardless of whether the menu is closed by clicking on a menu item or by clicking outside the menu.  
+You can catch this event using the following code:
+
+```ts
+import { listen } from "@tauri-apps/api/event";
+
+listen("menu-did-close", () => {
+    alert("menu closed");
+});
+```

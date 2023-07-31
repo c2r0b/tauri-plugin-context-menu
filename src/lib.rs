@@ -7,7 +7,7 @@ use std::any::Any;
 use gtk::{Menu, MenuItem, prelude::*};
 
 #[cfg(target_os = "macos")]
-use cocoa::appkit::{NSMenu, NSMenuItem, NSControl};
+use cocoa::appkit::{NSMenuItem, NSControl};
 use cocoa::base::{id, nil, selector};
 use cocoa::foundation::{NSPoint, NSString, NSRect};
 use objc::{msg_send, sel, sel_impl, class};
@@ -25,12 +25,13 @@ struct Position {
 
 #[derive(Clone, serde::Deserialize)]
 struct MenuItem {
-    label: String,
-    disabled: bool,
+    label: Option<String>,
+    disabled: Option<bool>,
     shortcut: Option<String>,
     event: Option<String>,
     subitems: Option<Vec<MenuItem>>,
     icon_path: Option<String>,
+    is_separator: Option<bool>,
 }
 
 #[cfg(target_os = "linux")]
@@ -181,9 +182,20 @@ impl<R: Runtime> ContextMenu<R>
 
     #[cfg(target_os = "macos")]
     fn create_custom_menu_item(option: &MenuItem) -> id {
+        // If the item is a separator, return a separator item
+        if option.is_separator.unwrap_or(false) {
+            let separator: id = unsafe {
+                msg_send![class!(NSMenuItem), separatorItem]
+            };
+            return separator
+        }
+
         let sel = Self::register_menu_item_action();
         let menu_item: id = unsafe {
-            let title = NSString::alloc(nil).init_str(&option.label);
+            let title = match &option.label {
+                Some(label) => NSString::alloc(nil).init_str(label),
+                None => NSString::alloc(nil).init_str(""),
+            };
             
             // Parse the shortcut
             let (key, mask) = match &option.shortcut {
@@ -213,9 +225,12 @@ impl<R: Runtime> ContextMenu<R>
             let item = cocoa::appkit::NSMenuItem::alloc(nil).initWithTitle_action_keyEquivalent_(title, sel, key);
             item.setKeyEquivalentModifierMask_(mask);
             
-            // Set the enabled state
-            item.setEnabled_(if option.disabled { NO } else { YES });
-    
+            // Set the enabled state (disabled flag is optional)
+            item.setEnabled_(match option.disabled {
+                Some(true) => NO,
+                _ => YES,
+            });
+            
             // Set the represented object to the event name
             let string = match &option.event {
                 Some(event_name) => NSString::alloc(nil).init_str(event_name),
@@ -239,13 +254,14 @@ impl<R: Runtime> ContextMenu<R>
             // Set the submenu if it exists
             if let Some(subitems) = &option.subitems {
                 let submenu: id = msg_send![class!(NSMenu), new];
+                let _: () = msg_send![submenu, setAutoenablesItems:NO];
                 for subitem in subitems.iter() {
                     let sub_menu_item: id = Self::create_custom_menu_item(subitem);
                     let _: () = msg_send![submenu, addItem:sub_menu_item];
                 }
                 let _: () = msg_send![item, setSubmenu:submenu];
             }
-            
+
             item
         };
         menu_item
@@ -253,12 +269,13 @@ impl<R: Runtime> ContextMenu<R>
 
     #[cfg(target_os = "macos")]
     fn create_context_menu(options: &[MenuItem], window: &Window<R>) -> id {
+        let _: () = Self::set_window(window.clone());
         unsafe {
             let title = NSString::alloc(nil).init_str("Menu");
             let menu: id = msg_send![class!(NSMenu), alloc];
             let menu: id = msg_send![menu, initWithTitle: title];
-            
-            let _: () = Self::set_window(window.clone());
+
+            let _: () = msg_send![menu, setAutoenablesItems:NO];
             
             for option in options.iter().cloned() {
                 let item: id = Self::create_custom_menu_item(&option);
@@ -269,8 +286,7 @@ impl<R: Runtime> ContextMenu<R>
             let delegate_class: &'static objc::runtime::Class = objc::runtime::Class::get(delegate_class_name).expect("Class should exist");
             let delegate_instance: id = msg_send![delegate_class, new];
             let _: () = msg_send![menu, setDelegate:delegate_instance];
-    
-            let _: () = msg_send![menu, setAutoenablesItems:NO];
+
             menu
         }
     }

@@ -1,39 +1,46 @@
 import * as tauriApi from 'https://esm.run/@tauri-apps/api';
 import * as tauriEvent from 'https://esm.run/@tauri-apps/api/event';
+import * as tauriApiPath from 'https://esm.run/@tauri-apps/api/path';
 
-window.addEventListener('contextmenu', async () => {
+window.addEventListener('contextmenu', async (e) => {
+    e.preventDefault();
+    
+    const assetUrl = await tauriApiPath.resolveResource('icons/32x32.png');
+
     tauriApi.invoke('plugin:context_menu|show_context_menu', {
-    items: [
-        {
-            label: "My first item",
-            disabled: false,
-            event: "my_first_item",
-            shortcut: "alt+m",
-            icon_path: "assets/icons/16x16.png"
-        },
-        {
-            label: "My second item",
-            disabled: false,
-            event: "my_second_item",
-            shortcut: "cmd+C"
-        },
-        {
-            label: "My third item",
-            disabled: false,
-            subitems: [
-                {
-                    label: "My first subitem",
-                    disabled: false,
-                    event: "my_first_subitem",
-                    shortcut: "ctrl+m"
-                },
-                {
-                    label: "My second subitem",
-                    disabled: true
-                }
-            ]
-        }
-    ]
+        items: [
+            {
+                label: "My first item",
+                disabled: false,
+                event: "my_first_item",
+                shortcut: "alt+m",
+                icon_path: assetUrl
+            },
+            {
+                is_separator: true
+            },
+            {
+                label: "My second item",
+                disabled: true,
+                event: "my_second_item",
+                shortcut: "cmd+C"
+            },
+            {
+                label: "My third item",
+                disabled: false,
+                subitems: [
+                    {
+                        label: "My first subitem",
+                        event: "my_first_subitem",
+                        shortcut: "ctrl+m",
+                        disabled: true
+                    },
+                    {
+                        label: "My second subitem",
+                    }
+                ]
+            }
+        ]
     });
 
     // on context menu item click
