@@ -16,7 +16,7 @@ All non-supported listed features are intended as future development.
 | Shortcut         | ✅      | ❌       | ❌        |
 | Separator        | ✅      | ❌       | ❌        |
 | OnClose          | ✅      | ❌       | ❌        |
-| Icon             | 🔜      | ❌       | ❌        |
+| Icon             | ✅      | ❌       | ❌        |
 
 ## Installation
 Crate: https://crates.io/crates/tauri-plugin-context-menu
@@ -44,9 +44,11 @@ npm run tauri dev
 ```ts
 import { invoke } from "@tauri-apps/api";
 import { listen } from "@tauri-apps/api/event";
+import { resolveResource } from "@tauri-apps/api/path";
 
-window.addEventListener("contextmenu", (e) => {
+window.addEventListener("contextmenu", async (e) => {
     e.preventDefault();
+    const iconUrl = await resolveResource('assets/16x16.png');
 
     // Show the context menu
     invoke("plugin:context_menu|show_context_menu", {
@@ -55,7 +57,8 @@ window.addEventListener("contextmenu", (e) => {
                 label: "Item 1",
                 disabled: false,
                 event: "item1clicked",
-                shortcut: "ctrl+M"
+                shortcut: "ctrl+M",
+                icon_path: iconUrl,
                 subitems: [
                     {
                         label: "Subitem 1",
@@ -97,6 +100,7 @@ List of options that can be passed to the plugin.
 | event | `string` | Event name to be emitted when the menu item is clicked. |
 | subitems | `MenuItem[]` | List of sub menu items to be displayed. |
 | shortcut | `string` | Keyboard shortcut displayed on the right. |
+| icon_path | `string` | Path to the icon file. |
 | is_separator | `boolean` | Whether the menu item is a separator. |
 
 ### Position

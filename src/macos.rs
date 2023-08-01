@@ -119,9 +119,14 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
         // Set the icon if it exists
         if let Some(icon_path) = &option.icon_path {
             let ns_string_path: id = NSString::alloc(nil).init_str(icon_path);
-            let image: *mut Object = msg_send![class!(NSImage), imageNamed: ns_string_path];
-            let _: () = msg_send![item, setImage:image];
-        }
+            let image: *mut Object = msg_send![class!(NSImage), alloc];
+            let image: *mut Object = msg_send![image, initWithContentsOfFile:ns_string_path];
+            if image.is_null() {
+                println!("Failed to load image from path: {}", icon_path);
+            } else {
+                let _: () = msg_send![item, setImage:image];
+            }
+        }        
 
         // Set the delegate
         let delegate_class_name = "MenuItemDelegate";
