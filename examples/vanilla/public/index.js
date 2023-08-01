@@ -5,7 +5,7 @@ import * as tauriApiPath from 'https://esm.run/@tauri-apps/api/path';
 window.addEventListener('contextmenu', async (e) => {
     e.preventDefault();
     
-    const assetUrl = await tauriApiPath.resolveResource('icons/32x32.png');
+    const assetUrl = await tauriApiPath.resolveResource('assets/16x16.png');
 
     tauriApi.invoke('plugin:context_menu|show_context_menu', {
         items: [
