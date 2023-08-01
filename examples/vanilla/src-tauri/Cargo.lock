@@ -2691,15 +2691,13 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-context-menu"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "block",
  "cocoa",
  "dispatch",
  "lazy_static",
  "libc",
  "objc",
- "once_cell",
  "serde",
  "tauri",
 ]
