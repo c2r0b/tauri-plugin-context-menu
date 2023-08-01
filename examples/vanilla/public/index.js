@@ -32,11 +32,11 @@ window.addEventListener('contextmenu', async (e) => {
                     {
                         label: "My first subitem",
                         event: "my_first_subitem",
-                        shortcut: "ctrl+m",
-                        disabled: true
+                        shortcut: "ctrl+m"
                     },
                     {
                         label: "My second subitem",
+                        disabled: true
                     }
                 ]
             }
