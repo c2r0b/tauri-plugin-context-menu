@@ -1,10 +1,15 @@
 use tauri::{plugin::Plugin, plugin::Builder, plugin::TauriPlugin, State, Window, Manager, Runtime, Invoke};
 use std::sync::Arc;
 
-mod window_holder;
 mod menu_item;
-
 use menu_item::MenuItem;
+
+#[cfg(target_os = "windows")]
+#[path = "win.rs"]
+mod os;
+
+#[cfg(target_os = "macos")]
+mod window_holder;
 
 #[cfg(target_os = "macos")]
 #[path = "macos.rs"]

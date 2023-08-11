@@ -9,14 +9,14 @@ The default Tauri API does not support context menu, so this plugin is created t
 All non-supported listed features are intended as future development.
 |                  | MacOS   | Windows | Linux   |
 | ---------------- | ------- | ------- | ------- |
-| Usability        | ✅      | ❌       | ❌        |
-| Submenu          | ✅      | ❌       | ❌        |
-| Disabled         | ✅      | ❌       | ❌        |
-| Callback         | ✅      | ❌       | ❌        |
+| Usability        | ✅      | ✅       | ❌        |
+| Submenu          | ✅      | ✅       | ❌        |
+| Disabled         | ✅      | ✅       | ❌        |
+| Callback         | ✅      | ✅       | ❌        |
 | Shortcut         | ✅      | ❌       | ❌        |
-| Separator        | ✅      | ❌       | ❌        |
-| OnClose          | ✅      | ❌       | ❌        |
-| Icon             | ✅      | ❌       | ❌        |
+| Separator        | ✅      | ✅       | ❌        |
+| OnClose          | ✅      | ✅       | ❌        |
+| Icon             | ✅      | 🔜       | ❌        |
 
 ## Installation
 Crate: https://crates.io/crates/tauri-plugin-context-menu
@@ -45,6 +45,11 @@ npm run tauri dev
 import { invoke } from "@tauri-apps/api";
 import { listen } from "@tauri-apps/api/event";
 import { resolveResource } from "@tauri-apps/api/path";
+
+// Listen to the event emitted when the first menu item is clicked
+listen("item1clicked", () => {
+    alert("item 1 clicked");
+});
 
 window.addEventListener("contextmenu", async (e) => {
     e.preventDefault();
@@ -76,11 +81,6 @@ window.addEventListener("contextmenu", async (e) => {
                 ]
             }
         ],
-    });
-
-    // Listen to the event emitted when the first menu item is clicked
-    listen("item1clicked", () => {
-        alert("item 1 clicked");
     });
 });
 ```

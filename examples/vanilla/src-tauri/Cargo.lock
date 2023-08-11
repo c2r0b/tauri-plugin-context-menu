@@ -2700,6 +2700,7 @@ dependencies = [
  "objc",
  "serde",
  "tauri",
+ "winapi",
 ]
 
 [[package]]

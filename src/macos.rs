@@ -184,7 +184,8 @@ pub fn show_context_menu<R: Runtime>(context_menu: Arc<ContextMenu<R>>, window: 
                 let window_position = window.outer_position().unwrap();
                 let screen: id = msg_send![class!(NSScreen), mainScreen];
                 let frame: NSRect = msg_send![screen, frame];
-                let screen_height = frame.size.height;let scale_factor = match window.scale_factor() {
+                let screen_height = frame.size.height;
+                let scale_factor = match window.scale_factor() {
                     Ok(factor) => factor,
                     Err(_) => 1.0,  // Use a default value if getting the scale factor fails
                 };
