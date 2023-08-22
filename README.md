@@ -6,17 +6,9 @@ The default Tauri API does not support context menu, so this plugin is created t
 ![Screenshot](./assets/screenshot.png)
 
 ## Support
-All non-supported listed features are intended as future development.
-|                  | MacOS   | Windows | Linux   |
-| ---------------- | ------- | ------- | ------- |
-| Usability        | ✅      | ✅       | ❌        |
-| Submenu          | ✅      | ✅       | ❌        |
-| Disabled         | ✅      | ✅       | ❌        |
-| Callback         | ✅      | ✅       | ❌        |
-| Shortcut         | ✅      | ❌       | ❌        |
-| Separator        | ✅      | ✅       | ❌        |
-| OnClose          | ✅      | ✅       | ❌        |
-| Icon             | ✅      | 🔜       | ❌        |
+|                  | Windows | MacOS | Linux |
+| ---------------- | ------- | ----- | ------- |
+| Fully supported  | ✅      | ✅   | 🔜      |
 
 ## Installation
 Crate: https://crates.io/crates/tauri-plugin-context-menu
@@ -63,7 +55,9 @@ window.addEventListener("contextmenu", async (e) => {
                 disabled: false,
                 event: "item1clicked",
                 shortcut: "ctrl+M",
-                icon_path: iconUrl,
+                icon: {
+                    path: iconUrl
+                },
                 subitems: [
                     {
                         label: "Subitem 1",
@@ -90,28 +84,57 @@ List of options that can be passed to the plugin.
 | Option | Type | Description |
 | ------ | ---- | ----------- |
 | items | `MenuItem[]` | List of menu items to be displayed. |
-| pos | `Position` | Position of the menu. Default to the cursor position. |
+| pos | `Position` | Position of the menu. Defaults to the cursor position. |
 
 ### MenuItem
-| Option | Type | Description |
-| ------ | ---- | ----------- |
-| label | `string` | Displayed test of the menu item. |
-| disabled | `boolean` | Whether the menu item is disabled. |
-| event | `string` | Event name to be emitted when the menu item is clicked. |
-| subitems | `MenuItem[]` | List of sub menu items to be displayed. |
-| shortcut | `string` | Keyboard shortcut displayed on the right. |
-| icon_path | `string` | Path to the icon file. |
-| is_separator | `boolean` | Whether the menu item is a separator. |
+| Option | Type | Optional | Default | Description |
+| ------ | ---- |---- |---- | ----------- |
+| label | `string` | | | Displayed test of the menu item. |
+| disabled | `boolean` | `optional` |  `false` | Whether the menu item is disabled. |
+| event | `string` | `optional` | | Event name to be emitted when the menu item is clicked. |
+| subitems | `MenuItem[]` | `optional` |  `[]` | List of sub menu items to be displayed. |
+| shortcut | `string` | `optional` | | Keyboard shortcut displayed on the right. |
+| icon | `MenuItemIcon` | `optional` | | Icon to be displayed on the left. |
+| is_separator | `boolean` | `optional` | `false` | Whether the menu item is a separator. |
+
+
+### MenuItemIcon
+| Option | Type | Optional | Default | Description |
+| ------ | ---- |---- |---- | ----------- |
+| path | `string` | | | Absolute path to the icon file. |
+| width | `number` | `optional` | `16` | Width of the icon. |
+| height | `number` | `optional` | `16` | Height of the icon. |
 
 ### Position
-Position coordinates are relative to the currently active window.
-| Option | Type | Description |
-| ------ | ---- | ----------- |
-| x | `number` | X position of the menu. |
-| y | `number` | Y position of the menu. |
+Position coordinates must be relative to the currently active window when `is_absolute` is set to `false`.
+| Option | Type | Optional | Default | Description |
+| ------ | ---- |---- |---- | ----------- |
+| x | `number` | | | X position of the menu. |
+| y | `number` | | | Y position of the menu. |
+| is_absolute | `boolean` |`optional` | `false` |  Is the position absolute to the screen. |
 
 ## Events
-### menuDidClose
+### Item Clicked
+Emitted when a menu item is clicked. The event name is the same as the `event` option of the menu item:
+
+```ts
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api";
+
+listen("[EVENTNAME]", () => {
+    alert("menu item clicked");
+});
+
+invoke(...{
+    items: [{
+        ...
+        event: "[EVENTNAME]",
+        ...
+    }]
+});
+```
+
+### Menu Did Close
 Emitted when the menu is closed. This event is emitted regardless of whether the menu is closed by clicking on a menu item or by clicking outside the menu.  
 You can catch this event using the following code:
 

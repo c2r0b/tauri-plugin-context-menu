@@ -7,11 +7,12 @@ use objc::{msg_send, sel, sel_impl, class};
 use objc::runtime::{Sel, Object, YES, NO};
 use objc::declare::ClassDecl;
 
-use crate::{ ContextMenu, MenuItem, Position, window_holder };
+use crate::{ ContextMenu, MenuItem, Position };
+use crate::macos_window_holder::{CURRENT_WINDOW};
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
-    let window_arc: Arc<tauri::Window<R>> = match window_holder::CURRENT_WINDOW.get_window() {
+    let window_arc: Arc<tauri::Window<R>> = match CURRENT_WINDOW.get_window() {
         Some(window_arc) => window_arc,
         None => return println!("No window found"),
     };
@@ -31,7 +32,7 @@ extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id)
 }    
 
 extern "C" fn menu_did_close<R: Runtime>(_self: &Object, _cmd: Sel, _menu: id) {
-    if let Some(window) = window_holder::CURRENT_WINDOW.get_window::<R>() {
+    if let Some(window) = CURRENT_WINDOW.get_window::<R>() {
         window.emit("menu-did-close", ()).unwrap();
     } else {
         println!("Menu did close, but no window was found.");
@@ -151,7 +152,7 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
 }
 
 fn create_context_menu<R: Runtime>(context_menu: &ContextMenu<R>, options: &[MenuItem], window: &Window<R>) -> id {
-    let _: () = window_holder::CURRENT_WINDOW.set_window(window.clone());
+    let _: () = CURRENT_WINDOW.set_window(window.clone());
     unsafe {
         let title = NSString::alloc(nil).init_str("Menu");
         let menu: id = msg_send![class!(NSMenu), alloc];

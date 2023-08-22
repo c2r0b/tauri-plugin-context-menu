@@ -1,21 +1,21 @@
 use tauri::{Window, Runtime};
 use std::sync::{Arc, Mutex};
-use std::ffi::OsStr;
 use std::collections::HashMap;
 use std::ptr::null_mut;
-use std::os::windows::ffi::OsStrExt;
 use std::convert::TryInto;
-use winapi::um::winuser::{
-    CreatePopupMenu, AppendMenuW, TrackPopupMenu, GetCursorPos, DestroyMenu, PostQuitMessage,
-    LoadImageW, SetMenuItemBitmaps, GetMessageW, TranslateMessage, DispatchMessageW, ClientToScreen,
-    TPM_LEFTALIGN, TPM_TOPALIGN, TPM_RIGHTBUTTON, IMAGE_BITMAP, LR_LOADFROMFILE,
-    MF_SEPARATOR, MF_ENABLED, MF_DISABLED, MF_STRING, MF_POPUP, MF_BYPOSITION,
-    WM_COMMAND, MSG
+use winapi::{
+    um::winuser::{
+        CreatePopupMenu, AppendMenuW, TrackPopupMenu, GetCursorPos, DestroyMenu, PostQuitMessage,
+        SetMenuItemBitmaps, GetMessageW, TranslateMessage, DispatchMessageW, ClientToScreen,
+        TPM_LEFTALIGN, TPM_TOPALIGN, TPM_RIGHTBUTTON, WM_COMMAND, WM_HOTKEY, MSG, MF_SEPARATOR,
+        MF_ENABLED, MF_DISABLED, MF_STRING, MF_POPUP, MF_BYCOMMAND
+    },
+    shared::windef::{POINT, HWND__, HWND, HMENU},
+    shared::minwindef::LOWORD
 };
-use winapi::shared::windef::{POINT, HWND__, HWND, HMENU, HBITMAP};
-use winapi::shared::minwindef::LOWORD;
 
 use crate::{ ContextMenu, MenuItem, Position };
+use crate::win_image_handler::{load_bitmap_from_file, convert_to_hbitmap};
 
 const ID_MENU_ITEM_BASE: u32 = 1000;
 
@@ -25,20 +25,17 @@ lazy_static::lazy_static! {
     static ref CALLBACK_MAP: Mutex<HashMap<u32, String>> = Mutex::new(HashMap::new());
 }
 
-unsafe fn load_bitmap_from_file(path: &str) -> HBITMAP {
-    let path_wide: Vec<u16> = OsStr::new(path).encode_wide().chain(Some(0).into_iter()).collect();
-    println!("Loading image from path: {}", path);
-    LoadImageW(
-        null_mut(),
-        path_wide.as_ptr(),
-        IMAGE_BITMAP,
-        0,
-        0,
-        LR_LOADFROMFILE
-    ) as HBITMAP
+pub fn get_label_with_shortcut(label: &str, shortcut: Option<&str>) -> String {
+    label.to_string() + &shortcut.map_or_else(String::new, |s| {
+        format!("\t{}", s.split('+').map(|part| {
+            let mut c = part.chars();
+            // Convert the first character to uppercase for each shortcut part
+            c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str()
+        }).collect::<Vec<_>>().join("+"))
+    })
 }
 
-fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> u32 {
+fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u32, String> {
     let id = *counter;
     *counter += 1;
 
@@ -48,7 +45,9 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> u32 {
         }
     } else {
         let label = item.label.as_deref().unwrap_or("");
-        let label_wide: Vec<u16> = label.encode_utf16().chain(std::iter::once(0)).collect(); // Add a null terminator
+        let shortcut = item.shortcut.as_deref();
+        let menu_label = get_label_with_shortcut(label, shortcut);
+        let label_wide: Vec<u16> = menu_label.encode_utf16().chain(std::iter::once(0)).collect(); // Add a null terminator
         let mut flags: u32 = MF_STRING;
 
         // Check if the item should be disabled
@@ -61,7 +60,7 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> u32 {
         if let Some(subitems) = &item.subitems {
             let submenu = unsafe { CreatePopupMenu() };
             for subitem in subitems.iter() {
-                append_menu_item(submenu, subitem, counter);
+                let _ = append_menu_item(submenu, subitem, counter);
             }
             unsafe {
                 AppendMenuW(menu, MF_POPUP | flags, (submenu as u32).try_into().unwrap(), label_wide.as_ptr());
@@ -78,19 +77,27 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> u32 {
         }
 
         // If the icon path is provided, load the bitmap and set it for the menu item.
-        if let Some(icon_path) = &item.icon_path {
-            let bitmap = unsafe { load_bitmap_from_file(icon_path) };
-            if bitmap.is_null() {
-                println!("Failed to load image from path: {}", icon_path);
-            } else {
-                unsafe {
-                    SetMenuItemBitmaps(menu, id as u32, MF_BYPOSITION, bitmap, bitmap);
-                }
+        if let Some(icon) = &item.icon {
+            match load_bitmap_from_file(&icon.path, icon.width, icon.height) {
+                Ok(bitmap) => match convert_to_hbitmap(bitmap) {
+                    Ok(hbitmap) => {
+                        if !hbitmap.is_null() {
+                            unsafe {
+                                SetMenuItemBitmaps(menu, id as u32, MF_BYCOMMAND, hbitmap, hbitmap);
+                            }
+                        }
+                        else {
+                            return Err(format!("Failed to load bitmap from path: {}", icon.path));
+                        }
+                    }
+                    Err(err_msg) => return Err(err_msg),
+                },
+                Err(err) => return Err(format!("Failed to load image from path: {}. Error: {:?}", icon.path, err)),
             }
         }
     }
 
-    id
+    Ok(id)
 }
 
 // This function would be called when a WM_COMMAND message is received, with the ID of the menu item that was clicked
@@ -110,7 +117,7 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
     let mut counter = ID_MENU_ITEM_BASE;
     if let Some(menu_items) = items {
         for item in menu_items.iter() {
-            append_menu_item(menu, item, &mut counter);
+            let _ = append_menu_item(menu, item, &mut counter);
         }
     }
 
@@ -119,10 +126,14 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
             let scale_factor = window.scale_factor().unwrap_or(1.0); // Use 1.0 as a default if getting the scale factor fails
             let mut point = POINT { x: (p.x * scale_factor) as i32, y: (p.y * scale_factor) as i32 };
 
-            unsafe {
-                ClientToScreen(hwnd as HWND, &mut point);
+            if p.is_absolute.unwrap_or(false) {
+                point
+            } else {
+                unsafe {
+                    ClientToScreen(hwnd as HWND, &mut point);
+                }
+                point
             }
-            point
         },
         None => {
             // Get the current cursor position using GetCursorPos
@@ -156,15 +167,19 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
 
     let mut msg: MSG = unsafe { std::mem::zeroed() };
     while unsafe { GetMessageW(&mut msg, null_mut(), 0, 0) } > 0 {
-        if msg.message == WM_COMMAND {
-            // Extract the menu item ID from wParam
-            let menu_item_id = LOWORD(msg.wParam as u32);
-            handle_menu_item_click(menu_item_id.into(), window.clone());
-        }
-
-        unsafe {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
+        println!("Message received: {:?} {:?}", msg.message, msg.wParam);
+        match msg.message {
+            WM_COMMAND => {
+                // Extract the menu item ID from wParam
+                let menu_item_id = LOWORD(msg.wParam as u32);
+                handle_menu_item_click(menu_item_id.into(), window.clone());
+            }
+            _ => {
+                unsafe {
+                    TranslateMessage(&msg);
+                    DispatchMessageW(&msg);
+                }
+            }
         }
     }
 }

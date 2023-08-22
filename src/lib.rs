@@ -5,11 +5,14 @@ mod menu_item;
 use menu_item::MenuItem;
 
 #[cfg(target_os = "windows")]
+mod win_image_handler;
+
+#[cfg(target_os = "windows")]
 #[path = "win.rs"]
 mod os;
 
 #[cfg(target_os = "macos")]
-mod window_holder;
+mod macos_window_holder;
 
 #[cfg(target_os = "macos")]
 #[path = "macos.rs"]
@@ -19,6 +22,7 @@ mod os;
 pub struct Position {
     x: f64,
     y: f64,
+    is_absolute: Option<bool>,
 }
 
 pub struct ContextMenu<R: Runtime> {

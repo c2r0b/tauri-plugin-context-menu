@@ -7,8 +7,15 @@ pub struct MenuItem {
     pub shortcut: Option<String>,
     pub event: Option<String>,
     pub subitems: Option<Vec<MenuItem>>,
-    pub icon_path: Option<String>,
+    pub icon: Option<MenuItemIcon>,
     pub is_separator: Option<bool>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct MenuItemIcon {
+    pub path: String,
+    pub width: Option<u32>,
+    pub height: Option<u32>
 }
 
 impl Default for MenuItem {
@@ -19,7 +26,7 @@ impl Default for MenuItem {
             shortcut: None,
             event: None,
             subitems: None,
-            icon_path: None,
+            icon: None,
             is_separator: Some(false),
         }
     }
