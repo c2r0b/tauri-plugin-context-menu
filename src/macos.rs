@@ -2,7 +2,7 @@ use tauri::{Window, Runtime};
 use std::sync::Arc;
 use cocoa::appkit::{NSMenuItem, NSControl};
 use cocoa::base::{id, nil, selector};
-use cocoa::foundation::{NSPoint, NSString, NSRect};
+use cocoa::foundation::{NSPoint, NSString, NSRect, NSSize};
 use objc::{msg_send, sel, sel_impl, class};
 use objc::runtime::{Sel, Object, YES, NO};
 use objc::declare::ClassDecl;
@@ -118,13 +118,18 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
         let _: () = msg_send![item, setRepresentedObject:string];
             
         // Set the icon if it exists
-        if let Some(icon_path) = &option.icon_path {
-            let ns_string_path: id = NSString::alloc(nil).init_str(icon_path);
+        if let Some(icon) = &option.icon {
+            let ns_string_path: id = NSString::alloc(nil).init_str(&icon.path);
             let image: *mut Object = msg_send![class!(NSImage), alloc];
             let image: *mut Object = msg_send![image, initWithContentsOfFile:ns_string_path];
             if image.is_null() {
-                println!("Failed to load image from path: {}", icon_path);
+                println!("Failed to load image from path: {}", icon.path);
             } else {
+                let width = icon.width.unwrap_or(16);
+                let height = icon.height.unwrap_or(16);
+                let size = NSSize::new(width as f64, height as f64);
+                let _: () = msg_send![image, setSize:size];
+
                 let _: () = msg_send![item, setImage:image];
             }
         }        
@@ -190,9 +195,15 @@ pub fn show_context_menu<R: Runtime>(context_menu: Arc<ContextMenu<R>>, window: 
                     Ok(factor) => factor,
                     Err(_) => 1.0,  // Use a default value if getting the scale factor fails
                 };
-                let x = pos.x + (window_position.x as f64 / scale_factor);
-                let y = screen_height - (window_position.y as f64 / scale_factor) - pos.y;
-                NSPoint::new(x, y)
+                if pos.is_absolute.unwrap_or(false) {
+                    let x = pos.x;
+                    let y = screen_height - pos.y;
+                    NSPoint::new(x, y)
+                } else {
+                    let x = pos.x + (window_position.x as f64 / scale_factor);
+                    let y = screen_height - (window_position.y as f64 / scale_factor) - pos.y;
+                    NSPoint::new(x, y)
+                }
             }
             // Get the current mouse location if the web page didn't specify a position
             _ => unsafe {
