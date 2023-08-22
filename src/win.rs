@@ -167,7 +167,6 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
 
     let mut msg: MSG = unsafe { std::mem::zeroed() };
     while unsafe { GetMessageW(&mut msg, null_mut(), 0, 0) } > 0 {
-        println!("Message received: {:?} {:?}", msg.message, msg.wParam);
         match msg.message {
             WM_COMMAND => {
                 // Extract the menu item ID from wParam
