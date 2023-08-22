@@ -30,8 +30,6 @@ window.addEventListener('contextmenu', (e) => {
     
     // get icon path
     (tauriApiPath.resolveResource('assets/16x16.png')).then((assetUrl) => {
-        assetUrl = assetUrl.replace("\\\\?\\", "");
-
         // show context menu
         tauriApi.invoke('plugin:context_menu|show_context_menu', {
             pos: {
@@ -44,7 +42,11 @@ window.addEventListener('contextmenu', (e) => {
                     disabled: false,
                     event: "my_first_item",
                     shortcut: "alt+m",
-                    icon_path: assetUrl
+                    icon: {
+                        path: assetUrl,
+                        width: 32,
+                        height: 32
+                    }
                 },
                 {
                     is_separator: true

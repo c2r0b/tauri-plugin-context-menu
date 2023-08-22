@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-context-menu"
-version = "0.3.0"
+version = "0.4.0"
 authors = [ "c2r0b" ]
 description = "Handle native Context Menu in Tauri"
 license = "MIT OR Apache-2.0"
@@ -15,6 +15,7 @@ lazy_static = "1.4"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }
+image = "0.24.7"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.24.1"
