@@ -8,7 +8,7 @@ use objc::runtime::{Sel, Object, YES, NO};
 use objc::declare::ClassDecl;
 
 use crate::{ ContextMenu, MenuItem, Position };
-use crate::macos_window_holder::{CURRENT_WINDOW};
+use crate::macos_window_holder::CURRENT_WINDOW;
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static

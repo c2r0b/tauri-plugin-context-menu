@@ -14,7 +14,7 @@ tauri = { version = "1.4", features = [ "path-all", "dialog-all" ] }
 tauri-plugin-context-menu = { path = "../../../" }
 
 [build-dependencies]
-tauri-build = { version = "1.2.1", features = [] }
+tauri-build = { version = "1.4.0", features = [] }
 
 [features]
 default = [ "custom-protocol" ]
