@@ -6,7 +6,7 @@ description = "Handle native Context Menu in Tauri"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 rust-version = "1.59"
-exclude = ["/examples", "/assets", ".DS_Store", "/.github", "/.changes"]
+exclude = ["/examples", "/assets", ".DS_Store", "/.github", "/.changes", "/webview-dist", "/webview-src", "package.json", "package-lock.json"]
 
 [dependencies]
 tauri = { version = "1.4" }

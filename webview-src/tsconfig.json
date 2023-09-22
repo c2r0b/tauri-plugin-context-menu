@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "target": "ES5",
+      "strict": true,
+      "allowJs": true,
+      "esModuleInterop": true,
+      "baseUrl": ".",
+      "paths": {
+        "types": ["@types"]
+      },
+      "declaration": true,
+      "declarationDir": "../webview-dist",
+      "lib": ["ES5", "DOM", "ES2015"]
+    },
+    "include": [
+        "./**/*.ts",
+        "./**/*.d.ts"
+    ]
+  }

@@ -1,3 +1,9 @@
 /target
-/Cargo.lock
 .DS_Store
+.Thumbs.db
+package-lock.json
+.vscode/
+.yarn
+yarn.lock
+node_modules/
+Cargo.lock
