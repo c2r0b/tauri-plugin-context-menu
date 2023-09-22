@@ -1,0 +1,1 @@
+declare module 'tauri-plugin-context-menu';

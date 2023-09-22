@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+      "target": "ES5",
+      "strict": true,
+      "allowJs": true,
+      "esModuleInterop": true,
+      "baseUrl": ".",
+      "paths": {
+        "types": ["@types"]
+      },
+      "declaration": true,
+      "declarationDir": "./public"
+    },
+    "include": [
+        "./src/index.ts",
+        "./src/index.d.ts"
+    ]
+  }

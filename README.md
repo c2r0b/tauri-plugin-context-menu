@@ -25,16 +25,24 @@ tauri-plugin-context-menu = { git = "https://github.com/c2r0b/tauri-plugin-conte
 
 See ["Using a Plugin" Tauri official guide](https://tauri.app/v1/guides/features/plugin#using-a-plugin) to initialize the plugin.
 
+This project provides a typescript utility to simplify the usage of the plugin. Run the following to install the JavaScript/TypeScript package:
+    
+```bash
+ npm i tauri-plugin-context-menu
+```
+
 ## Run Example
-A vanilla JS example is provided in `examples/vanilla`. To run the example, run the following commands:
+A vanilla JS example is provided in `examples/vanilla`. To run the example, use the following commands:
 
 ```bash
 cd examples/vanilla
-npm run tauri dev
-```
+npm i && npm run tauri dev
+``` 
+
+A typescript example using the utility package is provided in `examples/ts-utility` instead. You can run it with the same commands as above (replace `vanilla` with `ts-utility`).
 
 ## Sample Usage
-
+### Without the JS/TS Package
 ```ts
 import { invoke } from "@tauri-apps/api";
 import { listen } from "@tauri-apps/api/event";
@@ -81,6 +89,29 @@ window.addEventListener("contextmenu", async (e) => {
 });
 ```
 
+### With the JS/TS Package
+```ts
+import { showMenu } from "tauri-plugin-context-menu";
+
+showMenu({ 
+    pos: {...} // Position of the menu (see below for options)
+    items: [
+        ...,
+        {
+            ..., // Menu item (see below for options)
+            event: () => {
+                // Do something
+            }
+        }
+    ]
+});
+```
+You can also use it to respond to window events with the `onEventShowMenu` function:
+```ts
+import { onEventShowMenu } from "tauri-plugin-context-menu";
+onEventShowMenu("contextmenu", (e) => ({ /* menuOptions */ }));
+```
+
 ## Options
 List of options that can be passed to the plugin.
 | Option | Type | Description |
@@ -89,11 +120,11 @@ List of options that can be passed to the plugin.
 | pos | `Position` | Position of the menu. Defaults to the cursor position. |
 
 ### MenuItem
-| Option | Type | Optional | Default | Description |
-| ------ | ---- |---- |---- | ----------- |
-| label | `string` | | | Displayed test of the menu item. |
+| Option | Type | Optional | Default | Description | JS/TS pkg |
+| ------ | ---- |---- |---- | ----------- | ----------- |
+| label | `string` | | | Displayed test of the menu item. ||
 | disabled | `boolean` | `optional` |  `false` | Whether the menu item is disabled. |
-| event | `string` | `optional` | | Event name to be emitted when the menu item is clicked. |
+| event | `string` | `optional` | | Event name to be emitted when the menu item is clicked. | You can pass a function to be executed instead of an event name. |
 | subitems | `MenuItem[]` | `optional` |  `[]` | List of sub menu items to be displayed. |
 | shortcut | `string` | `optional` | | Keyboard shortcut displayed on the right. |
 | icon | `MenuItemIcon` | `optional` | | Icon to be displayed on the left. |
@@ -101,9 +132,9 @@ List of options that can be passed to the plugin.
 
 
 ### MenuItemIcon
-| Option | Type | Optional | Default | Description |
-| ------ | ---- |---- |---- | ----------- |
-| path | `string` | | | Absolute path to the icon file. |
+| Option | Type | Optional | Default | Description | JS/TS pkg |
+| ------ | ---- |---- |---- | ----------- | ----------- |
+| path | `string` | | | Absolute path to the icon file. | You can use `assetToPath` to convert a relative path to an absolute path. |
 | width | `number` | `optional` | `16` | Width of the icon. |
 | height | `number` | `optional` | `16` | Height of the icon. |
 
