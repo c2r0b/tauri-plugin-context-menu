@@ -1,3 +1,5 @@
+import type { UnlistenFn } from "@tauri-apps/api/event"
+
 export interface Position {
     x: number
     y: number
@@ -23,6 +25,11 @@ export interface Item {
 export interface Options {
     pos?: Position
     items: Item[]
+}
+
+export interface ProcessResult {
+    unlisteners: UnlistenFn[]
+    processed: Item[]
 }
 
 export type EventOptionsFunction = (e?: MouseEvent) => Options | Promise<Options>;

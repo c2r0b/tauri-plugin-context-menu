@@ -8,46 +8,59 @@ import * as ContextMenu from './types';
 export { ContextMenu };
 
 export async function assetToPath(asset: string): Promise<string> {
-    return await tauriApiPath.resolveResource(asset);
+	return await tauriApiPath.resolveResource(asset);
 }
 
-export function showMenu(options: ContextMenu.Options): void {
-    // for each item, if it is a function, replace it with an event listener
-    function processItems(items: ContextMenu.Item[], prefix: string): void {
-      for (let i = 0; i < items.length; i++) {
-        const itemEvent = items[i].event;
-  
-        if (typeof itemEvent === 'function') {
-          const eventName = `${prefix}_context_menu_item_${i}`;
-          
-          // Listen to the event and call the function directly
-          tauriEvent.listen(eventName, (e) => itemEvent(e));
-          items[i].event = eventName;
-        }
-  
-        // Recurse into subitems if they exist
-        if (items[i].subitems) {
-          processItems(items[i].subitems as ContextMenu.Item[], `${prefix}_${i}`);
-        }
-      }
-    }
-  
-    processItems(options.items, 'root');
-    
-    // send the options to the plugin
-    tauriApi.invoke(SHOW_COMMAND, options as any);
-  }
-  
+// for each item, if it is a function, replace it with an event listener
+async function processItems(items: ContextMenu.Item[], prefix: string): Promise<ContextMenu.ProcessResult> {
+	const unlisteners: tauriEvent.UnlistenFn[] = [];
+	const processed:ContextMenu.Item[] = [ ...items.map((item) => ({ ...item })) ];
+
+	for (let i = 0; i < processed.length; i++) {
+		const itemEvent = processed[i].event;
+
+		if (typeof itemEvent === 'function') {
+			const eventName = `${prefix}_context_menu_item_${i}`;
+
+			// Listen to the event and call the function directly
+			unlisteners.push(await tauriEvent.listen(eventName, (e) => itemEvent(e)));
+			processed[i].event = eventName;
+		}
+
+		// Recurse into subitems if they exist
+		if (items[i].subitems) {
+			const result = await processItems(items[i].subitems as ContextMenu.Item[], `${prefix}_${i}`);
+			unlisteners.push(...result.unlisteners);
+			processed[i].subitems = result.processed;
+		}
+	}
+
+	return { unlisteners, processed };
+}
+
+export async function showMenu(options: ContextMenu.Options) {
+	const { unlisteners, processed } = await processItems(options.items, 'root');
+
+	// unlisten all events when the menu closes
+	const unlistenMenuClose = await tauriEvent.listen("menu-did-close", () => {
+		unlisteners.forEach((unlistener) => unlistener());
+		unlisteners.length = 0;
+		unlistenMenuClose();
+	});
+
+	// send the options to the plugin
+	tauriApi.invoke(SHOW_COMMAND, { ...options, items: processed } as any);
+}
 
 export function onEventShowMenu(eventName: string, options: ContextMenu.EventOptions): void {
-    window.addEventListener(eventName, async (e) => {
-        e.preventDefault();
+	window.addEventListener(eventName, async (e) => {
+		e.preventDefault();
+		
+		// if options is a function, call it to get the options
+		if (typeof options === 'function') {
+			options = await options(e as MouseEvent);
+		}
 
-        // if options is a function, call it to get the options
-        if (typeof options === 'function') {
-            options = await options(e as MouseEvent);
-        }
-
-        showMenu(options);
-    });
+		await showMenu(options);
+	});
 }
