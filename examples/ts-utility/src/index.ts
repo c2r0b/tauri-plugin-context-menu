@@ -44,6 +44,5 @@ onEventShowMenu('contextmenu', async (e:MouseEvent) => {
             }
         ]
     };
-    console.log(e, options);
     return options;
  });
