@@ -49,8 +49,8 @@ import { listen } from "@tauri-apps/api/event";
 import { resolveResource } from "@tauri-apps/api/path";
 
 // Listen to the event emitted when the first menu item is clicked
-listen("item1clicked", () => {
-    alert("item 1 clicked");
+listen("item1clicked", (event) => {
+    alert(event.payload);
 });
 
 window.addEventListener("contextmenu", async (e) => {
@@ -64,6 +64,7 @@ window.addEventListener("contextmenu", async (e) => {
                 label: "Item 1",
                 disabled: false,
                 event: "item1clicked",
+                payload: "Hello World!",
                 shortcut: "ctrl+M",
                 icon: {
                     path: iconUrl
@@ -125,6 +126,7 @@ List of options that can be passed to the plugin.
 | label | `string` | | | Displayed test of the menu item. ||
 | disabled | `boolean` | `optional` |  `false` | Whether the menu item is disabled. |
 | event | `string` | `optional` | | Event name to be emitted when the menu item is clicked. | You can pass a function to be executed instead of an event name. |
+| payload | `string` | `optional` | | Payload to be passed to the event. | You can pass any type of data. |
 | subitems | `MenuItem[]` | `optional` |  `[]` | List of sub menu items to be displayed. |
 | shortcut | `string` | `optional` | | Keyboard shortcut displayed on the right. |
 | icon | `MenuItemIcon` | `optional` | | Icon to be displayed on the left. |

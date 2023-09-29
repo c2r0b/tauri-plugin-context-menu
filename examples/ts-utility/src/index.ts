@@ -1,14 +1,15 @@
 import { assetToPath, onEventShowMenu } from 'tauri-plugin-context-menu';
 
-onEventShowMenu('contextmenu', async (e:MouseEvent) => {
+onEventShowMenu('contextmenu', async (_e:MouseEvent) => {
     const options = {
         items: [
             {
                 label: "My first item",
                 disabled: false,
-                event: () => {
-                    alert('My first item clicked');
+                event: (e:any) => {
+                    alert(e.payload?.message);
                 },
+                payload: { message: "Hello from the payload!" },
                 shortcut: "alt+m",
                 icon: {
                     path: await assetToPath('assets/16x16.png'),

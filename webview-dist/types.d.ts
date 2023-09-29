@@ -1,4 +1,4 @@
-import type { UnlistenFn } from "@tauri-apps/api/event";
+import type { Event, UnlistenFn } from "@tauri-apps/api/event";
 export interface Position {
     x: number;
     y: number;
@@ -9,11 +9,15 @@ export interface Icon {
     width?: number;
     height?: number;
 }
+export interface CallbackEvent extends Event<unknown> {
+    payload: any;
+}
 export interface Item {
     label?: string;
     disabled?: boolean;
     is_separator?: boolean;
-    event?: string | Function;
+    event?: string | ((e?: CallbackEvent) => any);
+    payload?: any;
     shortcut?: string;
     icon?: Icon;
     subitems?: Item[];
