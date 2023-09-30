@@ -22,7 +22,7 @@ const ID_MENU_ITEM_BASE: u32 = 1000;
 // We use a lazy_static Mutex to ensure thread safety.
 // This will store a map from menu item IDs to events.
 lazy_static::lazy_static! {
-    static ref CALLBACK_MAP: Mutex<HashMap<u32, String>> = Mutex::new(HashMap::new());
+    static ref CALLBACK_MAP: Mutex<HashMap<u32, (String, Option<String>)>> = Mutex::new(HashMap::new());
 }
 
 pub fn get_label_with_shortcut(label: &str, shortcut: Option<&str>) -> String {
@@ -73,7 +73,7 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
 
         // If an event is provided, store it in the callback map
         if let Some(event) = &item.event {
-            CALLBACK_MAP.lock().unwrap().insert(id, event.clone());
+            CALLBACK_MAP.lock().unwrap().insert(id, (event.clone(), item.payload.clone()));
         }
 
         // If the icon path is provided, load the bitmap and set it for the menu item.
@@ -102,8 +102,8 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
 
 // This function would be called when a WM_COMMAND message is received, with the ID of the menu item that was clicked
 pub fn handle_menu_item_click<R: Runtime>(id: u32, window: Window<R>) {
-    if let Some(event) = CALLBACK_MAP.lock().unwrap().get(&id) {
-        window.emit(event, ()).unwrap(); // Emit the event to JavaScript
+    if let Some((event, payload)) = CALLBACK_MAP.lock().unwrap().get(&id) {
+        window.emit(event, &payload).unwrap(); // Emit the event to JavaScript
     }
 }
 
