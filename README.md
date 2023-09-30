@@ -32,14 +32,14 @@ This project provides a typescript utility to simplify the usage of the plugin. 
 ```
 
 ## Run Example
-A vanilla JS example is provided in `examples/vanilla`. To run the example, use the following commands:
+A vanilla JS example is provided in `examples/vanilla`.  
+After `npm install`, to run the example use the following command:
 
 ```bash
-cd examples/vanilla
-npm i && npm run tauri dev
-``` 
+npm run examples/vanilla
+```
 
-A typescript example using the utility package is provided in `examples/ts-utility` instead. You can run it with the same commands as above (replace `vanilla` with `ts-utility`).
+A typescript example using the utility package is provided in `examples/ts-utility` instead. You can run it with the same command as above (replace `examples/vanilla` with `examples/ts-utility`).
 
 ## Sample Usage
 ### Without the JS/TS Package

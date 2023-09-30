@@ -1,8 +1,8 @@
 import esbuild from 'esbuild';
 
 esbuild.build({
-  entryPoints: ['./webview-src/index.ts'],
-  outdir: './webview-dist',
+  entryPoints: ['./index.ts'],
+  outdir: './dist',
   bundle: true,
   format: 'esm',
   splitting: true,
@@ -11,7 +11,7 @@ esbuild.build({
   loader: {
     '.ts': 'ts'
   },
-  tsconfig: './webview-src/tsconfig.json',
+  tsconfig: './tsconfig.json',
   platform: 'node',
   sourcemap: true
 }).catch(() => process.exit(1));
