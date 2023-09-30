@@ -9,7 +9,7 @@ rust-version = "1.59"
 exclude = ["/examples", "/assets", ".DS_Store", "/.github", "/.changes", "/webview-dist", "/webview-src", "package.json", "package-lock.json"]
 
 [dependencies]
-tauri = { version = "1.4" }
+tauri = { version = "1.5" }
 serde = { version = "1.0", features = ["derive"] }
 lazy_static = "1.4"
 
