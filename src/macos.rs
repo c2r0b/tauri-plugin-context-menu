@@ -9,6 +9,7 @@ use objc::declare::ClassDecl;
 
 use crate::{ ContextMenu, MenuItem, Position };
 use crate::macos_window_holder::{CURRENT_WINDOW};
+use crate::keymap::{get_key_map, get_modifier_map};
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
@@ -84,22 +85,24 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
             Some(shortcut) => {
                 let parts: Vec<&str> = shortcut.split('+').collect();
 
+                let key_map = get_key_map();
+                let modifier_map = get_modifier_map();
+
                 // Default values
-                let mut key = "";
+                let mut key_str = "";
                 let mut mask = cocoa::appkit::NSEventModifierFlags::empty();
 
                 for part in parts.iter() {
-                    match *part {
-                        "cmd" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask),
-                        "shift" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSShiftKeyMask),
-                        "alt" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask),
-                        "ctrl" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSControlKeyMask),
-                        // ... other modifier keys ...
-                        _ => key = *part,  // Assuming the last item or the only item without a '+' is the main key.
+                    if let Some(k) = key_map.get(*part) {
+                        key_str = k;
+                    } else if let Some(m) = modifier_map.get(*part) {
+                        mask.insert(*m);
+                    } else {
+                        key_str = *part; // Assuming the last item or the only item without a '+' is the main key.
                     }
                 }
                 
-                (NSString::alloc(nil).init_str(key), mask)
+                (NSString::alloc(nil).init_str(key_str), mask)
             }
             None => (NSString::alloc(nil).init_str(""), cocoa::appkit::NSEventModifierFlags::empty()),
         };

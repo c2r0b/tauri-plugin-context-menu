@@ -148,6 +148,57 @@ Position coordinates must be relative to the currently active window when `is_ab
 | y | `number` | | | Y position of the menu. |
 | is_absolute | `boolean` |`optional` | `false` |  Is the position absolute to the screen. |
 
+### Modifier Keys
+Modifier keys can be used in the `shortcut` option of a menu item to display the corresponding symbol (`⌘`, `⌃`, `⌥`, `⇧`).
+
+On MacOS this also makes the shortcut work when the modifier key is pressed (since it is handled by default by the OS).
+
+<details>
+  <summary>Key codes list</summary>
+  
+  #### Modifiers  
+  - `cmd`
+  - `cmd_or_ctrl` (Alias for `cmd` and `ctrl`)
+  - `shift`
+  - `alt`
+  - `ctrl`
+  - `opt` (Alias for `alt`)
+  - `altgr`
+  - `super`
+  - `win`
+  - `meta`
+
+  #### Keys
+  - `plus`
+  - `space`
+  - `tab`
+  - `capslock`
+  - `numlock`
+  - `scrolllock`
+  - `backspace`
+  - `delete`
+  - `insert`
+  - `return`
+  - `enter`
+  - `up`
+  - `down`
+  - `left`
+  - `right`
+  - `home`
+  - `end`
+  - `pageup`
+  - `pagedown`
+  - `escape`
+  - `esc`
+  - `num0...9`
+  - `numdec`
+  - `numadd`
+  - `numsub`
+  - `nummult`
+  - `numdiv`
+  - `f1...24`
+</details>
+
 ## Events
 ### Item Clicked
 Emitted when a menu item is clicked. The event name is the same as the `event` option of the menu item:

@@ -56,7 +56,7 @@ window.addEventListener('contextmenu', (e) => {
                     label: "My second item",
                     disabled: false,
                     event: "my_second_item",
-                    shortcut: "cmd+C"
+                    shortcut: "cmd_or_ctrl+backspace"
                 },
                 {
                     label: "My third item",
