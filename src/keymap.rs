@@ -1,5 +1,83 @@
 use std::collections::HashMap;
 
+#[cfg(target_os = "windows")]
+pub fn get_key_map() -> HashMap<&'static str, &'static str> {
+    let mut key_map = HashMap::new();
+    key_map.insert("cmd", "Ctrl"); // Alias for "ctrl"
+    key_map.insert("cmd_or_ctrl", "Ctrl");  // Alias for "ctrl"
+    key_map.insert("shift", "Shift");
+    key_map.insert("alt", "Alt");
+    key_map.insert("ctrl", "Ctrl");
+    key_map.insert("opt", "Alt");  // Alias for "alt"
+    key_map.insert("altgr", "AltGr");
+    key_map.insert("super", "Super");
+    key_map.insert("win", "Win");
+    key_map.insert("meta", "Meta");
+    key_map.insert("plus", "Plus");
+    key_map.insert("space", "Space");
+    key_map.insert("tab", "Tab");
+    key_map.insert("capslock", "CapsLock");
+    key_map.insert("numlock", "NumLock");
+    key_map.insert("scrolllock", "ScrollLock");
+    key_map.insert("backspace", "Backspace");
+    key_map.insert("delete", "Delete");
+    key_map.insert("insert", "Insert");
+    key_map.insert("return", "Return");
+    key_map.insert("enter", "Return");
+    key_map.insert("up", "UpArrow");
+    key_map.insert("down", "DownArrow");
+    key_map.insert("left", "LeftArrow");
+    key_map.insert("right", "RightArrow");
+    key_map.insert("home", "Home");
+    key_map.insert("end", "End");
+    key_map.insert("pageup", "PageUp");
+    key_map.insert("pagedown", "PageDown");
+    key_map.insert("escape", "Escape");
+    key_map.insert("esc", "Escape");
+    key_map.insert("num0", "Numpad0");
+    key_map.insert("num1", "Numpad1");
+    key_map.insert("num2", "Numpad2");
+    key_map.insert("num3", "Numpad3");
+    key_map.insert("num4", "Numpad4");
+    key_map.insert("num5", "Numpad5");
+    key_map.insert("num6", "Numpad6");
+    key_map.insert("num7", "Numpad7");
+    key_map.insert("num8", "Numpad8");
+    key_map.insert("num9", "Numpad9");
+    key_map.insert("numdec", "NumpadDecimal");
+    key_map.insert("numadd", "NumpadAdd");
+    key_map.insert("numsub", "NumpadSubtract");
+    key_map.insert("nummult", "NumpadMultiply");
+    key_map.insert("numdiv", "NumpadDivide");
+    key_map.insert("f1", "F1");
+    key_map.insert("f2", "F2");
+    key_map.insert("f3", "F3");
+    key_map.insert("f4", "F4");
+    key_map.insert("f5", "F5");
+    key_map.insert("f6", "F6");
+    key_map.insert("f7", "F7");
+    key_map.insert("f8", "F8");
+    key_map.insert("f9", "F9");
+    key_map.insert("f10", "F10");
+    key_map.insert("f11", "F11");
+    key_map.insert("f12", "F12");
+    key_map.insert("f13", "F13");
+    key_map.insert("f14", "F14");
+    key_map.insert("f15", "F15");
+    key_map.insert("f16", "F16");
+    key_map.insert("f17", "F17");
+    key_map.insert("f18", "F18");
+    key_map.insert("f19", "F19");
+    key_map.insert("f20", "F20");
+    key_map.insert("f21", "F21");
+    key_map.insert("f22", "F22");
+    key_map.insert("f23", "F23");
+    key_map.insert("f24", "F24");
+
+    key_map
+}
+
+#[cfg(target_os = "macos")]
 pub fn get_key_map() -> HashMap<&'static str, &'static str> {
     let mut key_map = HashMap::new();
     key_map.insert("plus", "+");

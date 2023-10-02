@@ -16,6 +16,7 @@ use winapi::{
 
 use crate::{ ContextMenu, MenuItem, Position };
 use crate::win_image_handler::{load_bitmap_from_file, convert_to_hbitmap};
+use crate::keymap::get_key_map;
 
 const ID_MENU_ITEM_BASE: u32 = 1000;
 
@@ -26,11 +27,16 @@ lazy_static::lazy_static! {
 }
 
 pub fn get_label_with_shortcut(label: &str, shortcut: Option<&str>) -> String {
+    let key_map = get_key_map();
+
     label.to_string() + &shortcut.map_or_else(String::new, |s| {
         format!("\t{}", s.split('+').map(|part| {
             let mut c = part.chars();
-            // Convert the first character to uppercase for each shortcut part
-            c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str()
+            // If the part exists in the key_map, use the key_map value.
+            // Otherwise, use the original logic.
+            key_map.get(part).map_or_else(|| {
+                c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str()
+            }, |value| value.to_string())
         }).collect::<Vec<_>>().join("+"))
     })
 }
