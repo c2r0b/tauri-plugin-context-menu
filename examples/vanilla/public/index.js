@@ -5,7 +5,7 @@ import * as tauriApiPath from 'https://esm.run/@tauri-apps/api/path';
 async function registerListeners() {
     // on context menu item click
     await tauriEvent.listen('my_first_item', (event) => {
-        alert(event.event);
+        alert(event.payload);
     });
 
     // on context menu item click
@@ -41,6 +41,7 @@ window.addEventListener('contextmenu', (e) => {
                     label: "My first item",
                     disabled: false,
                     event: "my_first_item",
+                    payload: "Hello from Tauri!",
                     shortcut: "alt+m",
                     icon: {
                         path: assetUrl,
@@ -55,7 +56,7 @@ window.addEventListener('contextmenu', (e) => {
                     label: "My second item",
                     disabled: false,
                     event: "my_second_item",
-                    shortcut: "cmd+C"
+                    shortcut: "cmd_or_ctrl+backspace"
                 },
                 {
                     label: "My third item",

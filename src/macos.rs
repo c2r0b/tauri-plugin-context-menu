@@ -9,6 +9,7 @@ use objc::declare::ClassDecl;
 
 use crate::{ ContextMenu, MenuItem, Position };
 use crate::macos_window_holder::{CURRENT_WINDOW};
+use crate::keymap::{get_key_map, get_modifier_map};
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
@@ -17,18 +18,21 @@ extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id)
         None => return println!("No window found"),
     };
 
-    // Get the event name from the representedObject of the NSMenuItem
+    // Get the event name and payload from the representedObject of the NSMenuItem
     let nsstring_obj: id = unsafe { msg_send![_item, representedObject] };
-    let event_name: String = unsafe {
+    let combined_str: String = unsafe {
         let cstr: *const std::os::raw::c_char = msg_send![nsstring_obj, UTF8String];
         std::ffi::CStr::from_ptr(cstr).to_string_lossy().into_owned()
     };
+    let parts: Vec<&str> = combined_str.split(":::").collect();
+    let event_name = parts.get(0).unwrap_or(&"").to_string();
+    let payload = parts.get(1).cloned();
 
     // Dereferencing the Arc to get a reference to the Window<R>
     let window = &*window_arc;
 
     // Emit the event on the window
-    window.emit(&event_name, ()).unwrap();
+    window.emit(&event_name, payload).unwrap();
 }    
 
 extern "C" fn menu_did_close<R: Runtime>(_self: &Object, _cmd: Sel, _menu: id) {
@@ -81,22 +85,24 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
             Some(shortcut) => {
                 let parts: Vec<&str> = shortcut.split('+').collect();
 
+                let key_map = get_key_map();
+                let modifier_map = get_modifier_map();
+
                 // Default values
-                let mut key = "";
+                let mut key_str = "";
                 let mut mask = cocoa::appkit::NSEventModifierFlags::empty();
 
                 for part in parts.iter() {
-                    match *part {
-                        "cmd" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask),
-                        "shift" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSShiftKeyMask),
-                        "alt" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask),
-                        "ctrl" => mask.insert(cocoa::appkit::NSEventModifierFlags::NSControlKeyMask),
-                        // ... other modifier keys ...
-                        _ => key = *part,  // Assuming the last item or the only item without a '+' is the main key.
+                    if let Some(k) = key_map.get(*part) {
+                        key_str = k;
+                    } else if let Some(m) = modifier_map.get(*part) {
+                        mask.insert(*m);
+                    } else {
+                        key_str = *part; // Assuming the last item or the only item without a '+' is the main key.
                     }
                 }
                 
-                (NSString::alloc(nil).init_str(key), mask)
+                (NSString::alloc(nil).init_str(key_str), mask)
             }
             None => (NSString::alloc(nil).init_str(""), cocoa::appkit::NSEventModifierFlags::empty()),
         };
@@ -110,13 +116,14 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
             _ => YES,
         });
         
-        // Set the represented object to the event name
-        let string = match &option.event {
-            Some(event_name) => NSString::alloc(nil).init_str(event_name),
-            None => NSString::alloc(nil).init_str(""),
+        // Set the represented object as the event name and payload
+        let string_payload = match &option.payload {
+            Some(payload) => format!("{}:::{}", &option.event.as_ref().unwrap_or(&"".to_string()), payload),
+            None => option.event.as_ref().unwrap_or(&"".to_string()).clone(),
         };
-        let _: () = msg_send![item, setRepresentedObject:string];
-            
+        let ns_string_payload = NSString::alloc(nil).init_str(&string_payload);
+        let _: () = msg_send![item, setRepresentedObject:ns_string_payload];
+
         // Set the icon if it exists
         if let Some(icon) = &option.icon {
             let ns_string_path: id = NSString::alloc(nil).init_str(&icon.path);

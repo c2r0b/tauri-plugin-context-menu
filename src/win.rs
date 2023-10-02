@@ -16,21 +16,27 @@ use winapi::{
 
 use crate::{ ContextMenu, MenuItem, Position };
 use crate::win_image_handler::{load_bitmap_from_file, convert_to_hbitmap};
+use crate::keymap::get_key_map;
 
 const ID_MENU_ITEM_BASE: u32 = 1000;
 
 // We use a lazy_static Mutex to ensure thread safety.
 // This will store a map from menu item IDs to events.
 lazy_static::lazy_static! {
-    static ref CALLBACK_MAP: Mutex<HashMap<u32, String>> = Mutex::new(HashMap::new());
+    static ref CALLBACK_MAP: Mutex<HashMap<u32, (String, Option<String>)>> = Mutex::new(HashMap::new());
 }
 
 pub fn get_label_with_shortcut(label: &str, shortcut: Option<&str>) -> String {
+    let key_map = get_key_map();
+
     label.to_string() + &shortcut.map_or_else(String::new, |s| {
         format!("\t{}", s.split('+').map(|part| {
             let mut c = part.chars();
-            // Convert the first character to uppercase for each shortcut part
-            c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str()
+            // If the part exists in the key_map, use the key_map value.
+            // Otherwise, use the original logic.
+            key_map.get(part).map_or_else(|| {
+                c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str()
+            }, |value| value.to_string())
         }).collect::<Vec<_>>().join("+"))
     })
 }
@@ -73,7 +79,7 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
 
         // If an event is provided, store it in the callback map
         if let Some(event) = &item.event {
-            CALLBACK_MAP.lock().unwrap().insert(id, event.clone());
+            CALLBACK_MAP.lock().unwrap().insert(id, (event.clone(), item.payload.clone()));
         }
 
         // If the icon path is provided, load the bitmap and set it for the menu item.
@@ -102,8 +108,8 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
 
 // This function would be called when a WM_COMMAND message is received, with the ID of the menu item that was clicked
 pub fn handle_menu_item_click<R: Runtime>(id: u32, window: Window<R>) {
-    if let Some(event) = CALLBACK_MAP.lock().unwrap().get(&id) {
-        window.emit(event, ()).unwrap(); // Emit the event to JavaScript
+    if let Some((event, payload)) = CALLBACK_MAP.lock().unwrap().get(&id) {
+        window.emit(event, &payload).unwrap(); // Emit the event to JavaScript
     }
 }
 

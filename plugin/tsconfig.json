@@ -9,7 +9,7 @@
         "types": ["@types"]
       },
       "declaration": true,
-      "declarationDir": "../webview-dist",
+      "declarationDir": "dist",
       "lib": ["ES5", "DOM", "ES2015"]
     },
     "include": [

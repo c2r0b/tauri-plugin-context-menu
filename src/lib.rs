@@ -4,6 +4,8 @@ use std::sync::Arc;
 mod menu_item;
 use menu_item::MenuItem;
 
+mod keymap;
+
 #[cfg(target_os = "windows")]
 mod win_image_handler;
 
