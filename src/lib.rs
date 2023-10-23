@@ -1,5 +1,6 @@
 use tauri::{plugin::Plugin, plugin::Builder, plugin::TauriPlugin, State, Window, Manager, Runtime, Invoke};
 use std::sync::Arc;
+use serde::Deserialize;
 
 mod menu_item;
 use menu_item::MenuItem;
@@ -20,7 +21,11 @@ mod macos_window_holder;
 #[path = "macos.rs"]
 mod os;
 
-#[derive(serde::Deserialize)]
+#[cfg(target_os = "linux")]
+#[path = "linux.rs"]
+mod os;
+
+#[derive(Clone, Deserialize)]
 pub struct Position {
     x: f64,
     y: f64,
