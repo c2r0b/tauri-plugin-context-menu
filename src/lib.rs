@@ -1,6 +1,7 @@
 use tauri::{plugin::Plugin, plugin::Builder, plugin::TauriPlugin, State, Window, Manager, Runtime, Invoke};
-use std::sync::Arc;
+use std::{sync::{Arc, Mutex}, time::Duration};
 use serde::Deserialize;
+use std::sync::mpsc;
 
 mod menu_item;
 use menu_item::MenuItem;
@@ -60,8 +61,13 @@ impl<R: Runtime> ContextMenu<R> {
         }
     }
 
-    fn show_context_menu(&self, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+    fn show_context_menu(&self, app_context: State<'_, os::AppContext>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
         let context_menu = Arc::new(self.clone());
+
+        #[cfg(target_os = "linux")]
+        os::show_context_menu(context_menu, app_context, window, pos, items);
+
+        #[cfg(any(target_os = "mac", target_os = "windows"))]
         os::show_context_menu(context_menu, window, pos, items);
     }
 }
@@ -77,15 +83,48 @@ impl<R: Runtime> Plugin<R> for ContextMenu<R> {
 }
 
 #[tauri::command]
-fn show_context_menu<R: Runtime>(manager: State<'_, ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
-    manager.show_context_menu(window, pos, items);
+fn show_context_menu<R: Runtime>(app_context: State<'_, os::AppContext>, manager: State<'_, ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+    manager.show_context_menu(app_context, window, pos, items);
 }
 
+#[cfg(any(target_os = "mac", target_os = "windows"))]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("context_menu")
         .invoke_handler(tauri::generate_handler![show_context_menu])
         .setup(|app| {
             app.manage(ContextMenu::<R>::default());
+            Ok(())
+        })
+        .build();
+}
+
+#[cfg(target_os = "linux")]
+pub fn init<R: Runtime>() -> TauriPlugin<R> {
+    use async_std::task;
+
+    let (tx, rx) = mpsc::channel::<os::GtkThreadCommand>();
+    let rx = Arc::new(Mutex::new(rx));
+
+    let rx = rx.clone();
+    glib::timeout_add_local(Duration::from_millis(100), move || {
+        let rx = rx.lock().unwrap();
+        if let Ok(cmd) = rx.try_recv() {
+            match cmd {
+                os::GtkThreadCommand::ShowContextMenu { pos, items, window } => {
+                    task::block_on(async {
+                        os::on_context_menu::<R>(pos, items, window).await;
+                    });
+                }
+            }
+        }
+        glib::Continue(true)
+    });
+
+    Builder::new("context_menu")
+        .invoke_handler(tauri::generate_handler![show_context_menu])
+        .setup(|app| {
+            app.manage(ContextMenu::<R>::default());
+            app.manage(os::AppContext { tx: Arc::new(Mutex::new(tx)) }); 
             Ok(())
         })
         .build()
