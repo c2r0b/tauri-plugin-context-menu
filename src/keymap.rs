@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+#[cfg(target_os = "linux")]
+use gdk::keys::constants;
+
 #[cfg(target_os = "windows")]
 pub fn get_key_map() -> HashMap<&'static str, &'static str> {
     let mut key_map = HashMap::new();
@@ -158,4 +161,81 @@ pub fn get_modifier_map() -> HashMap<&'static str, cocoa::appkit::NSEventModifie
     mod_map.insert("win", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);  // Alias for "cmd"
     mod_map.insert("meta", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);
     mod_map
+}
+
+#[cfg(target_os = "linux")]
+pub fn get_key_map() -> HashMap<&'static str, gdk::keys::Key> {
+    let mut key_map = HashMap::new();
+    key_map.insert("cmd", constants::Control_L); // Alias for "ctrl"
+    key_map.insert("cmd_or_ctrl", constants::Control_L);  // Alias for "ctrl"
+    key_map.insert("shift", constants::Shift_L);
+    key_map.insert("alt", constants::Alt_L);
+    key_map.insert("ctrl", constants::Control_L);
+    key_map.insert("opt", constants::Alt_L);  // Alias for "alt"
+    key_map.insert("altgr", constants::Alt_R);
+    key_map.insert("super", constants::Super_L);
+    key_map.insert("win", constants::Super_L);
+    key_map.insert("meta", constants::Super_L);
+    key_map.insert("plus", constants::plus);
+    key_map.insert("space", constants::space);
+    key_map.insert("tab", constants::Tab);
+    key_map.insert("capslock", constants::Caps_Lock);
+    key_map.insert("numlock", constants::Num_Lock);
+    key_map.insert("scrolllock", constants::Scroll_Lock);
+    key_map.insert("backspace", constants::BackSpace);
+    key_map.insert("delete", constants::Delete);
+    key_map.insert("insert", constants::Insert);
+    key_map.insert("return", constants::Return);
+    key_map.insert("enter", constants::Return);
+    key_map.insert("up", constants::Up);
+    key_map.insert("down", constants::Down);
+    key_map.insert("left", constants::Left);
+    key_map.insert("right", constants::Right);
+    key_map.insert("home", constants::Home);
+    key_map.insert("end", constants::End);
+    key_map.insert("pageup", constants::Page_Up);
+    key_map.insert("pagedown", constants::Page_Down);
+    key_map.insert("escape", constants::Escape);
+    key_map.insert("esc", constants::Escape);
+    key_map.insert("num0", constants::KP_0);
+    key_map.insert("num1", constants::KP_1);
+    key_map.insert("num2", constants::KP_2);
+    key_map.insert("num3", constants::KP_3);
+    key_map.insert("num4", constants::KP_4);
+    key_map.insert("num5", constants::KP_5);
+    key_map.insert("num6", constants::KP_6);
+    key_map.insert("num7", constants::KP_7);
+    key_map.insert("num8", constants::KP_8);
+    key_map.insert("num9", constants::KP_9);
+    key_map.insert("numdec", constants::KP_Decimal);
+    key_map.insert("numadd", constants::KP_Add);
+    key_map.insert("numsub", constants::KP_Subtract);
+    key_map.insert("nummult", constants::KP_Multiply);
+    key_map.insert("numdiv", constants::KP_Divide);
+    key_map.insert("f1", constants::F1);
+    key_map.insert("f2", constants::F2);
+    key_map.insert("f3", constants::F3);
+    key_map.insert("f4", constants::F4);
+    key_map.insert("f5", constants::F5);
+    key_map.insert("f6", constants::F6);
+    key_map.insert("f7", constants::F7);
+    key_map.insert("f8", constants::F8);
+    key_map.insert("f9", constants::F9);
+    key_map.insert("f10", constants::F10);
+    key_map.insert("f11", constants::F11);
+    key_map.insert("f12", constants::F12);
+    key_map.insert("f13", constants::F13);
+    key_map.insert("f14", constants::F14);
+    key_map.insert("f15", constants::F15);
+    key_map.insert("f16", constants::F16);
+    key_map.insert("f17", constants::F17);
+    key_map.insert("f18", constants::F18);
+    key_map.insert("f19", constants::F19);
+    key_map.insert("f20", constants::F20);
+    key_map.insert("f21", constants::F21);
+    key_map.insert("f22", constants::F22);
+    key_map.insert("f23", constants::F23);
+    key_map.insert("f24", constants::F24);
+
+    key_map
 }

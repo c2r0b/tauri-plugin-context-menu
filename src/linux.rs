@@ -1,13 +1,11 @@
-use gdk::Display;
+use gdk::{Display, ModifierType, keys::Key};
 use tauri::{Window, Runtime, State};
-use std::sync::mpsc::Sender;
-use std::sync::{Arc, Mutex};
-use std::any::Any;
-use gtk::{Menu, MenuItem as GtkMenuItem, prelude::*};
-use gtk::traits::WidgetExt;
+use std::{mem, sync::{Arc, Mutex, mpsc::Sender}, any::Any};
+use gtk::{Menu, MenuItem as GtkMenuItem, prelude::*, traits::WidgetExt, AccelGroup, AccelFlags};
 use glib::clone;
 
 use crate::{ ContextMenu, MenuItem, Position };
+use crate::keymap::get_key_map;
 
 pub struct AppContext {
     pub tx: Arc<Mutex<Sender<GtkThreadCommand>>>
@@ -31,7 +29,7 @@ pub async fn on_context_menu<R:Runtime>(pos:Option<Position>, items:Option<Vec<M
 
         if let Some(menu_items) = items.clone() {
             for item in menu_items.iter() {
-                append_menu_item(&menu, item);
+                append_menu_item(window, &gtk_window, &menu, item);
             }
         }
 
@@ -96,28 +94,51 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, app_con
     }).expect("Failed to send command to GTK thread");
 }
 
-fn append_menu_item(menu: &Menu, item: &MenuItem) {
+fn key_to_u32(key: gdk::keys::Key) -> u32 {
+    unsafe { mem::transmute(key) }
+}
+
+fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::ApplicationWindow, menu: &Menu, item: &MenuItem) {
     if item.is_separator.unwrap_or(false) {
-        menu.append(&gtk::SeparatorMenuItem::new());
+        menu.append(&gtk::SeparatorMenuItem::builder().visible(true).build());
     } else {
         let label = item.label.as_deref().unwrap_or("");
         let menu_item = GtkMenuItem::with_label(&label);
 
+        // Handle enabled/disabled state
         if item.disabled.unwrap_or(false) {
             menu_item.set_sensitive(false);
         }
 
-        // If an event is provided, you can connect to the "activate" signal
+        // If an event is provided, you can connect to the "activate" signal (from item.event and item.payload)
         if let Some(event) = &item.event {
-            menu_item.connect_activate(move |_| {
-                // Handle the event here
-            });
+            if let Some(payload) = &item.payload {
+                let window_clone = window.clone();
+
+                // get event from String to str
+                let event_clone = event.clone();
+                let payload_clone = payload.clone();
+                menu_item.connect_activate(move |_| {
+                    window_clone.emit(event_clone.as_str(), &payload_clone).unwrap(); // Emit the event to JavaScript
+                });
+            }
+        }
+
+        // Handle shortcut
+        if let Some(shortcut) = &item.shortcut {
+            let accel_group = AccelGroup::new();
+            gtk_window.add_accel_group(&accel_group);
+
+            // Parse and assign the shortcut
+            let (key, mods) = parse_shortcut(shortcut);
+            let key_u32 = key_to_u32(key);
+            menu_item.add_accelerator("activate", &accel_group, key_u32, mods, AccelFlags::VISIBLE);
         }
 
         if let Some(subitems) = &item.subitems {
             let submenu = Menu::new();
             for subitem in subitems.iter() {
-                append_menu_item(&submenu, subitem);
+                append_menu_item(window, &gtk_window, &submenu, subitem);
             }
             menu_item.set_submenu(Some(&submenu));
         }
@@ -125,4 +146,20 @@ fn append_menu_item(menu: &Menu, item: &MenuItem) {
         menu.append(&menu_item);
         menu_item.show();
     }
+}
+
+fn parse_shortcut(shortcut: &str) -> (Key, ModifierType) {
+    let key_map = get_key_map();
+    let parts: Vec<&str> = shortcut.split('+').collect();
+
+    let mut key: Key = 0.into();
+    let mut mods = ModifierType::empty();
+
+    for part in parts.iter() {
+        if let Some(k) = key_map.get(*part) {
+            key = k.clone();
+        }
+    }
+
+    (key, mods)
 }
