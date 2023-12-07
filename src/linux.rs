@@ -5,7 +5,7 @@ use gtk::{Menu, MenuItem as GtkMenuItem, prelude::*, traits::WidgetExt, AccelGro
 use glib::clone;
 
 use crate::{ ContextMenu, MenuItem, Position };
-use crate::keymap::get_key_map;
+use crate::keymap::{get_mod_map, get_key_map};
 
 pub struct AppContext {
     pub tx: Arc<Mutex<Sender<GtkThreadCommand>>>
@@ -94,16 +94,36 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, app_con
     }).expect("Failed to send command to GTK thread");
 }
 
-fn key_to_u32(key: gdk::keys::Key) -> u32 {
-    unsafe { mem::transmute(key) }
-}
-
 fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::ApplicationWindow, menu: &Menu, item: &MenuItem) {
     if item.is_separator.unwrap_or(false) {
         menu.append(&gtk::SeparatorMenuItem::builder().visible(true).build());
     } else {
+        let menu_item = GtkMenuItem::new();
+
+        // Create a Box to hold the image and label
+        let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        hbox.set_homogeneous(false);
+        
+        // Handle icon
+        if let Some(icon) = &item.icon {
+            let image = gtk::Image::from_file(&icon.path);
+            if let Some(width) = icon.width {
+                if let Some(height) = icon.height {
+                    image.set_pixel_size(width as i32);
+                    image.set_pixel_size(height as i32);
+                }
+            }
+            hbox.pack_start(&image, false, false, 0);
+        }
+        
+        // Add label to the Box
         let label = item.label.as_deref().unwrap_or("");
-        let menu_item = GtkMenuItem::with_label(&label);
+        let accel_label = gtk::AccelLabel::new(label);
+        accel_label.set_xalign(0.0); // Align the label to the left
+        hbox.pack_start(&accel_label, true, true, 0);
+    
+        // Add the Box to the MenuItem
+        menu_item.add(&hbox);
 
         // Handle enabled/disabled state
         if item.disabled.unwrap_or(false) {
@@ -112,16 +132,16 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
 
         // If an event is provided, you can connect to the "activate" signal (from item.event and item.payload)
         if let Some(event) = &item.event {
-            if let Some(payload) = &item.payload {
-                let window_clone = window.clone();
+            let window_clone = window.clone();
 
-                // get event from String to str
-                let event_clone = event.clone();
-                let payload_clone = payload.clone();
-                menu_item.connect_activate(move |_| {
-                    window_clone.emit(event_clone.as_str(), &payload_clone).unwrap(); // Emit the event to JavaScript
-                });
-            }
+            // payload may exist
+            let payload_clone = item.payload.clone();
+
+            // get event from String to str
+            let event_clone = event.clone();
+            menu_item.connect_activate(move |_| {
+                window_clone.emit(event_clone.as_str(), &payload_clone).unwrap(); // Emit the event to JavaScript
+            });
         }
 
         // Handle shortcut
@@ -131,8 +151,8 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
 
             // Parse and assign the shortcut
             let (key, mods) = parse_shortcut(shortcut);
-            let key_u32 = key_to_u32(key);
-            menu_item.add_accelerator("activate", &accel_group, key_u32, mods, AccelFlags::VISIBLE);
+            accel_label.set_accel_widget(Some(&menu_item));
+            menu_item.add_accelerator("activate", &accel_group, key, mods, AccelFlags::VISIBLE);
         }
 
         if let Some(subitems) = &item.subitems {
@@ -143,23 +163,43 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
             menu_item.set_submenu(Some(&submenu));
         }
 
+        hbox.show_all();
         menu.append(&menu_item);
         menu_item.show();
     }
 }
 
-fn parse_shortcut(shortcut: &str) -> (Key, ModifierType) {
+fn key_to_u32(key: gdk::keys::Key) -> u32 {
+    unsafe { mem::transmute(key) }
+}
+
+fn parse_shortcut(shortcut: &str) -> (u32, ModifierType) {
     let key_map = get_key_map();
+    let mod_map = get_mod_map(); // This should map strings like "ctrl" to ModifierType
     let parts: Vec<&str> = shortcut.split('+').collect();
 
-    let mut key: Key = 0.into();
+    // Assuming last part is always the key
+    let key_str = parts.last().unwrap_or(&"");
+
+    // Get the key from the key map
+    let key = if let Some(key) = key_map.get(key_str) {
+        // Clone the key value to get ownership of it
+        key.clone()
+    } else {
+        // If the key is not in the map, assume it's a character
+        Key::from_name(key_str)
+    };
+
+    let key_u32 = key_to_u32(key);
+
     let mut mods = ModifierType::empty();
 
-    for part in parts.iter() {
-        if let Some(k) = key_map.get(*part) {
-            key = k.clone();
+    // Process all parts except the last one as modifiers
+    for &mod_str in &parts[..parts.len() - 1] {
+        if let Some(&mod_type) = mod_map.get(mod_str) {
+            mods.insert(mod_type);
         }
     }
 
-    (key, mods)
+    (key_u32, mods)
 }

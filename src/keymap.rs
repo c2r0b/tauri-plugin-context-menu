@@ -239,3 +239,22 @@ pub fn get_key_map() -> HashMap<&'static str, gdk::keys::Key> {
 
     key_map
 }
+
+#[cfg(target_os = "linux")]
+pub fn get_mod_map() -> HashMap<&'static str, gdk::ModifierType> {
+    use gdk::ModifierType;
+
+    let mut mod_map = HashMap::new();
+    mod_map.insert("cmd", ModifierType::CONTROL_MASK); // Alias for "ctrl"
+    mod_map.insert("cmd_or_ctrl", ModifierType::CONTROL_MASK);  // Alias for "ctrl"
+    mod_map.insert("shift", ModifierType::SHIFT_MASK);
+    mod_map.insert("alt", ModifierType::MOD1_MASK);
+    mod_map.insert("ctrl", ModifierType::CONTROL_MASK);
+    mod_map.insert("opt", ModifierType::MOD1_MASK);  // Alias for "alt"
+    mod_map.insert("altgr", ModifierType::MOD5_MASK);
+    mod_map.insert("super", ModifierType::SUPER_MASK);
+    mod_map.insert("win", ModifierType::SUPER_MASK);
+    mod_map.insert("meta", ModifierType::META_MASK);
+
+    mod_map
+}
