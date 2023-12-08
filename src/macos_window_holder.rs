@@ -1,6 +1,6 @@
-use std::sync::{Arc, Mutex};
 use std::any::Any;
-use tauri::{Window, Runtime};
+use std::sync::{Arc, Mutex};
+use tauri::{Runtime, Window};
 
 pub struct WindowHolder {
     window: Arc<Mutex<Option<Arc<dyn Any + Send + Sync>>>>,

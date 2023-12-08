@@ -1,17 +1,25 @@
+use image::io::Reader as ImageReader;
 use std::ptr::null_mut;
 use winapi::{
-    um::wingdi::{CreateDIBSection, CreateCompatibleDC, BITMAPINFO},
-    shared::windef::{HBITMAP},
-    shared::ntdef::VOID,
     shared::minwindef::BYTE,
-    um::winuser::GetDC
+    shared::ntdef::VOID,
+    shared::windef::HBITMAP,
+    um::wingdi::{CreateCompatibleDC, CreateDIBSection, BITMAPINFO},
+    um::winuser::GetDC,
 };
-use image::io::Reader as ImageReader;
 
-pub fn load_bitmap_from_file(path: &str, width: Option<u32>, height: Option<u32>) -> Result<image::DynamicImage, image::ImageError> {
+pub fn load_bitmap_from_file(
+    path: &str,
+    width: Option<u32>,
+    height: Option<u32>,
+) -> Result<image::DynamicImage, image::ImageError> {
     let mut image_reader = ImageReader::open(path)?.decode()?;
     let (resized_width, resized_height) = (width.unwrap_or(16), height.unwrap_or(16));
-    image_reader = image_reader.resize(resized_width, resized_height, image::imageops::FilterType::Nearest);    
+    image_reader = image_reader.resize(
+        resized_width,
+        resized_height,
+        image::imageops::FilterType::Nearest,
+    );
     Ok(image_reader)
 }
 
@@ -43,7 +51,14 @@ pub fn convert_to_hbitmap(img: image::DynamicImage) -> Result<HBITMAP, String> {
 
     let mut bits: *mut VOID = std::ptr::null_mut();
     let hbitmap = unsafe {
-        CreateDIBSection(hdc_screen, &bmi, winapi::um::wingdi::DIB_RGB_COLORS, &mut bits, std::ptr::null_mut(), 0)
+        CreateDIBSection(
+            hdc_screen,
+            &bmi,
+            winapi::um::wingdi::DIB_RGB_COLORS,
+            &mut bits,
+            std::ptr::null_mut(),
+            0,
+        )
     };
     if hbitmap.is_null() {
         return Err("Failed to create DIB section.".to_string());

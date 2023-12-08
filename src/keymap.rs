@@ -7,11 +7,11 @@ use gdk::keys::constants;
 pub fn get_key_map() -> HashMap<&'static str, &'static str> {
     let mut key_map = HashMap::new();
     key_map.insert("cmd", "Ctrl"); // Alias for "ctrl"
-    key_map.insert("cmd_or_ctrl", "Ctrl");  // Alias for "ctrl"
+    key_map.insert("cmd_or_ctrl", "Ctrl"); // Alias for "ctrl"
     key_map.insert("shift", "Shift");
     key_map.insert("alt", "Alt");
     key_map.insert("ctrl", "Ctrl");
-    key_map.insert("opt", "Alt");  // Alias for "alt"
+    key_map.insert("opt", "Alt"); // Alias for "alt"
     key_map.insert("altgr", "AltGr");
     key_map.insert("super", "Super");
     key_map.insert("win", "Win");
@@ -151,15 +151,36 @@ pub fn get_key_map() -> HashMap<&'static str, &'static str> {
 pub fn get_modifier_map() -> HashMap<&'static str, cocoa::appkit::NSEventModifierFlags> {
     let mut mod_map = HashMap::new();
     mod_map.insert("cmd", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);
-    mod_map.insert("cmd_or_ctrl", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);  // Alias for "cmd"
+    mod_map.insert(
+        "cmd_or_ctrl",
+        cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask,
+    ); // Alias for "cmd"
     mod_map.insert("shift", cocoa::appkit::NSEventModifierFlags::NSShiftKeyMask);
-    mod_map.insert("alt", cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask);
-    mod_map.insert("ctrl", cocoa::appkit::NSEventModifierFlags::NSControlKeyMask);
-    mod_map.insert("opt", cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask);  // Alias for "alt"
-    mod_map.insert("altgr", cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask);  // Alias for "alt"
-    mod_map.insert("super", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);  // Alias for "cmd"
-    mod_map.insert("win", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);  // Alias for "cmd"
-    mod_map.insert("meta", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask);
+    mod_map.insert(
+        "alt",
+        cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask,
+    );
+    mod_map.insert(
+        "ctrl",
+        cocoa::appkit::NSEventModifierFlags::NSControlKeyMask,
+    );
+    mod_map.insert(
+        "opt",
+        cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask,
+    ); // Alias for "alt"
+    mod_map.insert(
+        "altgr",
+        cocoa::appkit::NSEventModifierFlags::NSAlternateKeyMask,
+    ); // Alias for "alt"
+    mod_map.insert(
+        "super",
+        cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask,
+    ); // Alias for "cmd"
+    mod_map.insert("win", cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask); // Alias for "cmd"
+    mod_map.insert(
+        "meta",
+        cocoa::appkit::NSEventModifierFlags::NSCommandKeyMask,
+    );
     mod_map
 }
 
@@ -167,11 +188,11 @@ pub fn get_modifier_map() -> HashMap<&'static str, cocoa::appkit::NSEventModifie
 pub fn get_key_map() -> HashMap<&'static str, gdk::keys::Key> {
     let mut key_map = HashMap::new();
     key_map.insert("cmd", constants::Control_L); // Alias for "ctrl"
-    key_map.insert("cmd_or_ctrl", constants::Control_L);  // Alias for "ctrl"
+    key_map.insert("cmd_or_ctrl", constants::Control_L); // Alias for "ctrl"
     key_map.insert("shift", constants::Shift_L);
     key_map.insert("alt", constants::Alt_L);
     key_map.insert("ctrl", constants::Control_L);
-    key_map.insert("opt", constants::Alt_L);  // Alias for "alt"
+    key_map.insert("opt", constants::Alt_L); // Alias for "alt"
     key_map.insert("altgr", constants::Alt_R);
     key_map.insert("super", constants::Super_L);
     key_map.insert("win", constants::Super_L);
@@ -246,11 +267,11 @@ pub fn get_mod_map() -> HashMap<&'static str, gdk::ModifierType> {
 
     let mut mod_map = HashMap::new();
     mod_map.insert("cmd", ModifierType::CONTROL_MASK); // Alias for "ctrl"
-    mod_map.insert("cmd_or_ctrl", ModifierType::CONTROL_MASK);  // Alias for "ctrl"
+    mod_map.insert("cmd_or_ctrl", ModifierType::CONTROL_MASK); // Alias for "ctrl"
     mod_map.insert("shift", ModifierType::SHIFT_MASK);
     mod_map.insert("alt", ModifierType::MOD1_MASK);
     mod_map.insert("ctrl", ModifierType::CONTROL_MASK);
-    mod_map.insert("opt", ModifierType::MOD1_MASK);  // Alias for "alt"
+    mod_map.insert("opt", ModifierType::MOD1_MASK); // Alias for "alt"
     mod_map.insert("altgr", ModifierType::MOD5_MASK);
     mod_map.insert("super", ModifierType::SUPER_MASK);
     mod_map.insert("win", ModifierType::SUPER_MASK);

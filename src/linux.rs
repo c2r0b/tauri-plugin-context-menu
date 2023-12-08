@@ -1,25 +1,33 @@
-use gdk::{Display, ModifierType, keys::Key};
-use tauri::{Window, Runtime, State};
-use std::{mem, sync::{Arc, Mutex, mpsc::Sender}, any::Any};
-use gtk::{Menu, MenuItem as GtkMenuItem, prelude::*, traits::WidgetExt, AccelGroup, AccelFlags};
+use gdk::{keys::Key, Display, ModifierType};
 use glib::clone;
+use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu, MenuItem as GtkMenuItem};
+use std::{
+    any::Any,
+    mem,
+    sync::{mpsc::Sender, Arc, Mutex},
+};
+use tauri::{Runtime, State, Window};
 
-use crate::{ ContextMenu, MenuItem, Position };
-use crate::keymap::{get_mod_map, get_key_map};
+use crate::keymap::{get_key_map, get_mod_map};
+use crate::{ContextMenu, MenuItem, Position};
 
 pub struct AppContext {
-    pub tx: Arc<Mutex<Sender<GtkThreadCommand>>>
+    pub tx: Arc<Mutex<Sender<GtkThreadCommand>>>,
 }
 
 pub enum GtkThreadCommand {
     ShowContextMenu {
         pos: Option<Position>,
         items: Option<Vec<MenuItem>>,
-        window: Arc<Mutex<Box<dyn Any + Send>>>
-    }
+        window: Arc<Mutex<Box<dyn Any + Send>>>,
+    },
 }
 
-pub async fn on_context_menu<R:Runtime>(pos:Option<Position>, items:Option<Vec<MenuItem>>, window:Arc<Mutex<Box<dyn Any + Send>>>) {
+pub async fn on_context_menu<R: Runtime>(
+    pos: Option<Position>,
+    items: Option<Vec<MenuItem>>,
+    window: Arc<Mutex<Box<dyn Any + Send>>>,
+) {
     let window_mutex = window.lock().unwrap();
     if let Some(window) = window_mutex.downcast_ref::<Window<R>>() {
         // Create and show the context menu
@@ -80,21 +88,38 @@ pub async fn on_context_menu<R:Runtime>(pos:Option<Position>, items:Option<Vec<M
         // Show the context menu at the specified position.
         let gdk_window = gtk_window.window().unwrap();
         let rect = &gdk::Rectangle::new(x, y, 0, 0);
-        menu.popup_at_rect(&gdk_window, rect, gdk::Gravity::NorthWest, gdk::Gravity::NorthWest, None);
+        menu.popup_at_rect(
+            &gdk_window,
+            rect,
+            gdk::Gravity::NorthWest,
+            gdk::Gravity::NorthWest,
+            None,
+        );
     }
 }
 
-pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, app_context: State<'_, AppContext>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
-
+pub fn show_context_menu<R: Runtime>(
+    _context_menu: Arc<ContextMenu<R>>,
+    app_context: State<'_, AppContext>,
+    window: Window<R>,
+    pos: Option<Position>,
+    items: Option<Vec<MenuItem>>,
+) {
     let tx = app_context.tx.lock().unwrap(); // Lock the mutex to access the sender
     tx.send(GtkThreadCommand::ShowContextMenu {
         pos,
         items,
         window: Arc::new(Mutex::new(Box::new(window) as Box<dyn Any + Send>)),
-    }).expect("Failed to send command to GTK thread");
+    })
+    .expect("Failed to send command to GTK thread");
 }
 
-fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::ApplicationWindow, menu: &Menu, item: &MenuItem) {
+fn append_menu_item<R: Runtime>(
+    window: &Window<R>,
+    gtk_window: &gtk::ApplicationWindow,
+    menu: &Menu,
+    item: &MenuItem,
+) {
     if item.is_separator.unwrap_or(false) {
         menu.append(&gtk::SeparatorMenuItem::builder().visible(true).build());
     } else {
@@ -103,7 +128,7 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
         // Create a Box to hold the image and label
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         hbox.set_homogeneous(false);
-        
+
         // Handle icon
         if let Some(icon) = &item.icon {
             let image = gtk::Image::from_file(&icon.path);
@@ -115,13 +140,13 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
             }
             hbox.pack_start(&image, false, false, 0);
         }
-        
+
         // Add label to the Box
         let label = item.label.as_deref().unwrap_or("");
         let accel_label = gtk::AccelLabel::new(label);
         accel_label.set_xalign(0.0); // Align the label to the left
         hbox.pack_start(&accel_label, true, true, 0);
-    
+
         // Add the Box to the MenuItem
         menu_item.add(&hbox);
 
@@ -140,7 +165,9 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
             // get event from String to str
             let event_clone = event.clone();
             menu_item.connect_activate(move |_| {
-                window_clone.emit(event_clone.as_str(), &payload_clone).unwrap(); // Emit the event to JavaScript
+                window_clone
+                    .emit(event_clone.as_str(), &payload_clone)
+                    .unwrap(); // Emit the event to JavaScript
             });
         }
 

@@ -1,7 +1,12 @@
-use tauri::{plugin::Plugin, plugin::Builder, plugin::TauriPlugin, State, Window, Manager, Runtime, Invoke};
-use std::{sync::{Arc, Mutex}, time::Duration};
 use serde::Deserialize;
 use std::sync::mpsc;
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+use tauri::{
+    plugin::Builder, plugin::Plugin, plugin::TauriPlugin, Invoke, Manager, Runtime, State, Window,
+};
 
 mod menu_item;
 use menu_item::MenuItem;
@@ -62,13 +67,24 @@ impl<R: Runtime> ContextMenu<R> {
     }
 
     #[cfg(target_os = "linux")]
-    fn show_context_menu(&self, app_context: State<'_, os::AppContext>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+    fn show_context_menu(
+        &self,
+        app_context: State<'_, os::AppContext>,
+        window: Window<R>,
+        pos: Option<Position>,
+        items: Option<Vec<MenuItem>>,
+    ) {
         let context_menu = Arc::new(self.clone());
         os::show_context_menu(context_menu, app_context, window, pos, items);
     }
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
-    fn show_context_menu(&self, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+    fn show_context_menu(
+        &self,
+        window: Window<R>,
+        pos: Option<Position>,
+        items: Option<Vec<MenuItem>>,
+    ) {
         let context_menu = Arc::new(self.clone());
         os::show_context_menu(context_menu, window, pos, items);
     }
@@ -86,13 +102,24 @@ impl<R: Runtime> Plugin<R> for ContextMenu<R> {
 
 #[cfg(target_os = "linux")]
 #[tauri::command]
-fn show_context_menu<R: Runtime>(app_context: State<'_, os::AppContext>, manager: State<'_, ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+fn show_context_menu<R: Runtime>(
+    app_context: State<'_, os::AppContext>,
+    manager: State<'_, ContextMenu<R>>,
+    window: Window<R>,
+    pos: Option<Position>,
+    items: Option<Vec<MenuItem>>,
+) {
     manager.show_context_menu(app_context, window, pos, items);
 }
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 #[tauri::command]
-fn show_context_menu<R: Runtime>(manager: State<'_, ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+fn show_context_menu<R: Runtime>(
+    manager: State<'_, ContextMenu<R>>,
+    window: Window<R>,
+    pos: Option<Position>,
+    items: Option<Vec<MenuItem>>,
+) {
     manager.show_context_menu(window, pos, items);
 }
 
@@ -133,7 +160,9 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![show_context_menu])
         .setup(|app| {
             app.manage(ContextMenu::<R>::default());
-            app.manage(os::AppContext { tx: Arc::new(Mutex::new(tx)) }); 
+            app.manage(os::AppContext {
+                tx: Arc::new(Mutex::new(tx)),
+            });
             Ok(())
         })
         .build()
