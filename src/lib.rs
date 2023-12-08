@@ -135,7 +135,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
 #[cfg(target_os = "linux")]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    use async_std::task;
+    use tauri::async_runtime;
 
     let (tx, rx) = mpsc::channel::<os::GtkThreadCommand>();
     let rx = Arc::new(Mutex::new(rx));
@@ -146,7 +146,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         if let Ok(cmd) = rx.try_recv() {
             match cmd {
                 os::GtkThreadCommand::ShowContextMenu { pos, items, window } => {
-                    task::block_on(async {
+                    async_runtime::block_on(async {
                         os::on_context_menu::<R>(pos, items, window).await;
                     });
                 }
