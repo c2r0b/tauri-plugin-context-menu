@@ -1,12 +1,11 @@
 use serde::Deserialize;
-use std::sync::mpsc;
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::sync::Arc;
 use tauri::{
     plugin::Builder, plugin::Plugin, plugin::TauriPlugin, Invoke, Manager, Runtime, State, Window,
 };
+
+#[cfg(target_os = "linux")]
+use std::{sync::{mpsc, Mutex}, time::Duration};
 
 mod menu_item;
 use menu_item::MenuItem;
