@@ -1,15 +1,15 @@
-use tauri::{Window, Runtime};
-use std::sync::Arc;
-use cocoa::appkit::{NSMenuItem, NSControl};
+use cocoa::appkit::{NSControl, NSMenuItem};
 use cocoa::base::{id, nil, selector};
-use cocoa::foundation::{NSPoint, NSString, NSRect, NSSize};
-use objc::{msg_send, sel, sel_impl, class};
-use objc::runtime::{Sel, Object, YES, NO};
+use cocoa::foundation::{NSPoint, NSRect, NSSize, NSString};
 use objc::declare::ClassDecl;
+use objc::runtime::{Object, Sel, NO, YES};
+use objc::{class, msg_send, sel, sel_impl};
+use std::sync::Arc;
+use tauri::{Runtime, Window};
 
-use crate::{ ContextMenu, MenuItem, Position };
-use crate::macos_window_holder::{CURRENT_WINDOW};
 use crate::keymap::{get_key_map, get_modifier_map};
+use crate::macos_window_holder::CURRENT_WINDOW;
+use crate::{ContextMenu, MenuItem, Position};
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
@@ -22,7 +22,9 @@ extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id)
     let nsstring_obj: id = unsafe { msg_send![_item, representedObject] };
     let combined_str: String = unsafe {
         let cstr: *const std::os::raw::c_char = msg_send![nsstring_obj, UTF8String];
-        std::ffi::CStr::from_ptr(cstr).to_string_lossy().into_owned()
+        std::ffi::CStr::from_ptr(cstr)
+            .to_string_lossy()
+            .into_owned()
     };
     let parts: Vec<&str> = combined_str.split(":::").collect();
     let event_name = parts.get(0).unwrap_or(&"").to_string();
@@ -33,7 +35,7 @@ extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id)
 
     // Emit the event on the window
     window.emit(&event_name, payload).unwrap();
-}    
+}
 
 extern "C" fn menu_did_close<R: Runtime>(_self: &Object, _cmd: Sel, _menu: id) {
     if let Some(window) = CURRENT_WINDOW.get_window::<R>() {
@@ -55,8 +57,14 @@ fn register_menu_item_action<R: Runtime>() -> Sel {
         let mut decl = ClassDecl::new("MenuItemDelegate", superclass).unwrap();
 
         unsafe {
-            decl.add_method(selector(selector_name), menu_item_action::<R> as extern "C" fn(&Object, Sel, id));
-            decl.add_method(selector("menuDidClose:"), menu_did_close::<R> as extern "C" fn(&Object, Sel, id));
+            decl.add_method(
+                selector(selector_name),
+                menu_item_action::<R> as extern "C" fn(&Object, Sel, id),
+            );
+            decl.add_method(
+                selector("menuDidClose:"),
+                menu_did_close::<R> as extern "C" fn(&Object, Sel, id),
+            );
             decl.register();
         }
     }
@@ -67,10 +75,8 @@ fn register_menu_item_action<R: Runtime>() -> Sel {
 fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &MenuItem) -> id {
     // If the item is a separator, return a separator item
     if option.is_separator.unwrap_or(false) {
-        let separator: id = unsafe {
-            msg_send![class!(NSMenuItem), separatorItem]
-        };
-        return separator
+        let separator: id = unsafe { msg_send![class!(NSMenuItem), separatorItem] };
+        return separator;
     }
 
     let sel = register_menu_item_action::<R>();
@@ -79,7 +85,7 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
             Some(label) => NSString::alloc(nil).init_str(label),
             None => NSString::alloc(nil).init_str(""),
         };
-        
+
         // Parse the shortcut
         let (key, mask) = match &option.shortcut {
             Some(shortcut) => {
@@ -101,24 +107,32 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
                         key_str = *part; // Assuming the last item or the only item without a '+' is the main key.
                     }
                 }
-                
+
                 (NSString::alloc(nil).init_str(key_str), mask)
             }
-            None => (NSString::alloc(nil).init_str(""), cocoa::appkit::NSEventModifierFlags::empty()),
+            None => (
+                NSString::alloc(nil).init_str(""),
+                cocoa::appkit::NSEventModifierFlags::empty(),
+            ),
         };
-        
-        let item = cocoa::appkit::NSMenuItem::alloc(nil).initWithTitle_action_keyEquivalent_(title, sel, key);
+
+        let item = cocoa::appkit::NSMenuItem::alloc(nil)
+            .initWithTitle_action_keyEquivalent_(title, sel, key);
         item.setKeyEquivalentModifierMask_(mask);
-        
+
         // Set the enabled state (disabled flag is optional)
         item.setEnabled_(match option.disabled {
             Some(true) => NO,
             _ => YES,
         });
-        
+
         // Set the represented object as the event name and payload
         let string_payload = match &option.payload {
-            Some(payload) => format!("{}:::{}", &option.event.as_ref().unwrap_or(&"".to_string()), payload),
+            Some(payload) => format!(
+                "{}:::{}",
+                &option.event.as_ref().unwrap_or(&"".to_string()),
+                payload
+            ),
             None => option.event.as_ref().unwrap_or(&"".to_string()).clone(),
         };
         let ns_string_payload = NSString::alloc(nil).init_str(&string_payload);
@@ -139,11 +153,12 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
 
                 let _: () = msg_send![item, setImage:image];
             }
-        }        
+        }
 
         // Set the delegate
         let delegate_class_name = "MenuItemDelegate";
-        let delegate_class: &'static objc::runtime::Class = objc::runtime::Class::get(delegate_class_name).expect("Class should exist");
+        let delegate_class: &'static objc::runtime::Class =
+            objc::runtime::Class::get(delegate_class_name).expect("Class should exist");
         let delegate_instance: id = msg_send![delegate_class, new];
         item.setTarget_(delegate_instance);
 
@@ -163,7 +178,11 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
     menu_item
 }
 
-fn create_context_menu<R: Runtime>(context_menu: &ContextMenu<R>, options: &[MenuItem], window: &Window<R>) -> id {
+fn create_context_menu<R: Runtime>(
+    context_menu: &ContextMenu<R>,
+    options: &[MenuItem],
+    window: &Window<R>,
+) -> id {
     let _: () = CURRENT_WINDOW.set_window(window.clone());
     unsafe {
         let title = NSString::alloc(nil).init_str("Menu");
@@ -171,14 +190,15 @@ fn create_context_menu<R: Runtime>(context_menu: &ContextMenu<R>, options: &[Men
         let menu: id = msg_send![menu, initWithTitle: title];
 
         let _: () = msg_send![menu, setAutoenablesItems:NO];
-        
+
         for option in options.iter().cloned() {
             let item: id = create_custom_menu_item(&context_menu, &option);
             let _: () = msg_send![menu, addItem:item];
         }
 
         let delegate_class_name = "MenuItemDelegate";
-        let delegate_class: &'static objc::runtime::Class = objc::runtime::Class::get(delegate_class_name).expect("Class should exist");
+        let delegate_class: &'static objc::runtime::Class =
+            objc::runtime::Class::get(delegate_class_name).expect("Class should exist");
         let delegate_instance: id = msg_send![delegate_class, new];
         let _: () = msg_send![menu, setDelegate:delegate_instance];
 
@@ -186,7 +206,12 @@ fn create_context_menu<R: Runtime>(context_menu: &ContextMenu<R>, options: &[Men
     }
 }
 
-pub fn show_context_menu<R: Runtime>(context_menu: Arc<ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+pub fn show_context_menu<R: Runtime>(
+    context_menu: Arc<ContextMenu<R>>,
+    window: Window<R>,
+    pos: Option<Position>,
+    items: Option<Vec<MenuItem>>,
+) {
     let main_queue = dispatch::Queue::main();
     main_queue.exec_async(move || {
         let items_slice = items.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
@@ -200,7 +225,7 @@ pub fn show_context_menu<R: Runtime>(context_menu: Arc<ContextMenu<R>>, window: 
                 let screen_height = frame.size.height;
                 let scale_factor = match window.scale_factor() {
                     Ok(factor) => factor,
-                    Err(_) => 1.0,  // Use a default value if getting the scale factor fails
+                    Err(_) => 1.0, // Use a default value if getting the scale factor fails
                 };
                 if pos.is_absolute.unwrap_or(false) {
                     let x = pos.x;
@@ -211,7 +236,7 @@ pub fn show_context_menu<R: Runtime>(context_menu: Arc<ContextMenu<R>>, window: 
                     let y = screen_height - (window_position.y as f64 / scale_factor) - pos.y;
                     NSPoint::new(x, y)
                 }
-            }
+            },
             // Get the current mouse location if the web page didn't specify a position
             _ => unsafe {
                 let event: NSPoint = msg_send![class!(NSEvent), mouseLocation];
@@ -219,7 +244,8 @@ pub fn show_context_menu<R: Runtime>(context_menu: Arc<ContextMenu<R>>, window: 
             },
         };
         unsafe {
-            let _: () = msg_send![menu, popUpMenuPositioningItem:nil atLocation:location inView:nil];
+            let _: () =
+                msg_send![menu, popUpMenuPositioningItem:nil atLocation:location inView:nil];
         }
     });
 }

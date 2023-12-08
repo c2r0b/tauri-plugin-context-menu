@@ -1,22 +1,22 @@
-use tauri::{Window, Runtime};
-use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
-use std::ptr::null_mut;
 use std::convert::TryInto;
+use std::ptr::null_mut;
+use std::sync::{Arc, Mutex};
+use tauri::{Runtime, Window};
 use winapi::{
+    shared::minwindef::LOWORD,
+    shared::windef::{HMENU, HWND, HWND__, POINT},
     um::winuser::{
-        CreatePopupMenu, AppendMenuW, TrackPopupMenu, GetCursorPos, DestroyMenu, PostQuitMessage,
-        SetMenuItemBitmaps, GetMessageW, TranslateMessage, DispatchMessageW, ClientToScreen,
-        TPM_LEFTALIGN, TPM_TOPALIGN, TPM_RIGHTBUTTON, WM_COMMAND, WM_HOTKEY, MSG, MF_SEPARATOR,
-        MF_ENABLED, MF_DISABLED, MF_STRING, MF_POPUP, MF_BYCOMMAND
+        AppendMenuW, ClientToScreen, CreatePopupMenu, DestroyMenu, DispatchMessageW, GetCursorPos,
+        GetMessageW, PostQuitMessage, SetMenuItemBitmaps, TrackPopupMenu, TranslateMessage,
+        MF_BYCOMMAND, MF_DISABLED, MF_ENABLED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG,
+        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND, WM_HOTKEY,
     },
-    shared::windef::{POINT, HWND__, HWND, HMENU},
-    shared::minwindef::LOWORD
 };
 
-use crate::{ ContextMenu, MenuItem, Position };
-use crate::win_image_handler::{load_bitmap_from_file, convert_to_hbitmap};
 use crate::keymap::get_key_map;
+use crate::win_image_handler::{convert_to_hbitmap, load_bitmap_from_file};
+use crate::{ContextMenu, MenuItem, Position};
 
 const ID_MENU_ITEM_BASE: u32 = 1000;
 
@@ -29,16 +29,24 @@ lazy_static::lazy_static! {
 pub fn get_label_with_shortcut(label: &str, shortcut: Option<&str>) -> String {
     let key_map = get_key_map();
 
-    label.to_string() + &shortcut.map_or_else(String::new, |s| {
-        format!("\t{}", s.split('+').map(|part| {
-            let mut c = part.chars();
-            // If the part exists in the key_map, use the key_map value.
-            // Otherwise, use the original logic.
-            key_map.get(part).map_or_else(|| {
-                c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str()
-            }, |value| value.to_string())
-        }).collect::<Vec<_>>().join("+"))
-    })
+    label.to_string()
+        + &shortcut.map_or_else(String::new, |s| {
+            format!(
+                "\t{}",
+                s.split('+')
+                    .map(|part| {
+                        let mut c = part.chars();
+                        // If the part exists in the key_map, use the key_map value.
+                        // Otherwise, use the original logic.
+                        key_map.get(part).map_or_else(
+                            || c.next().unwrap_or_default().to_uppercase().to_string() + c.as_str(),
+                            |value| value.to_string(),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("+")
+            )
+        })
 }
 
 fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u32, String> {
@@ -53,7 +61,10 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
         let label = item.label.as_deref().unwrap_or("");
         let shortcut = item.shortcut.as_deref();
         let menu_label = get_label_with_shortcut(label, shortcut);
-        let label_wide: Vec<u16> = menu_label.encode_utf16().chain(std::iter::once(0)).collect(); // Add a null terminator
+        let label_wide: Vec<u16> = menu_label
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect(); // Add a null terminator
         let mut flags: u32 = MF_STRING;
 
         // Check if the item should be disabled
@@ -62,24 +73,32 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
         } else {
             flags |= MF_ENABLED;
         }
-        
+
         if let Some(subitems) = &item.subitems {
             let submenu = unsafe { CreatePopupMenu() };
             for subitem in subitems.iter() {
                 let _ = append_menu_item(submenu, subitem, counter);
             }
             unsafe {
-                AppendMenuW(menu, MF_POPUP | flags, (submenu as u32).try_into().unwrap(), label_wide.as_ptr());
+                AppendMenuW(
+                    menu,
+                    MF_POPUP | flags,
+                    (submenu as u32).try_into().unwrap(),
+                    label_wide.as_ptr(),
+                );
             }
         } else {
             unsafe {
-                AppendMenuW(menu, flags, id.try_into().unwrap(), label_wide.as_ptr());                    
+                AppendMenuW(menu, flags, id.try_into().unwrap(), label_wide.as_ptr());
             };
         }
 
         // If an event is provided, store it in the callback map
         if let Some(event) = &item.event {
-            CALLBACK_MAP.lock().unwrap().insert(id, (event.clone(), item.payload.clone()));
+            CALLBACK_MAP
+                .lock()
+                .unwrap()
+                .insert(id, (event.clone(), item.payload.clone()));
         }
 
         // If the icon path is provided, load the bitmap and set it for the menu item.
@@ -91,14 +110,18 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
                             unsafe {
                                 SetMenuItemBitmaps(menu, id as u32, MF_BYCOMMAND, hbitmap, hbitmap);
                             }
-                        }
-                        else {
+                        } else {
                             return Err(format!("Failed to load bitmap from path: {}", icon.path));
                         }
                     }
                     Err(err_msg) => return Err(err_msg),
                 },
-                Err(err) => return Err(format!("Failed to load image from path: {}. Error: {:?}", icon.path, err)),
+                Err(err) => {
+                    return Err(format!(
+                        "Failed to load image from path: {}. Error: {:?}",
+                        icon.path, err
+                    ))
+                }
             }
         }
     }
@@ -113,7 +136,12 @@ pub fn handle_menu_item_click<R: Runtime>(id: u32, window: Window<R>) {
     }
 }
 
-pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+pub fn show_context_menu<R: Runtime>(
+    _context_menu: Arc<ContextMenu<R>>,
+    window: Window<R>,
+    pos: Option<Position>,
+    items: Option<Vec<MenuItem>>,
+) {
     // Clear the callback map at the start of each context menu display
     CALLBACK_MAP.lock().unwrap().clear();
 
@@ -130,7 +158,10 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
     let position = match pos {
         Some(p) => {
             let scale_factor = window.scale_factor().unwrap_or(1.0); // Use 1.0 as a default if getting the scale factor fails
-            let mut point = POINT { x: (p.x * scale_factor) as i32, y: (p.y * scale_factor) as i32 };
+            let mut point = POINT {
+                x: (p.x * scale_factor) as i32,
+                y: (p.y * scale_factor) as i32,
+            };
 
             if p.is_absolute.unwrap_or(false) {
                 point
@@ -140,7 +171,7 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
                 }
                 point
             }
-        },
+        }
         None => {
             // Get the current cursor position using GetCursorPos
             let mut current_pos = POINT { x: 0, y: 0 };
@@ -148,7 +179,7 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
                 GetCursorPos(&mut current_pos);
             }
             current_pos
-        },
+        }
     };
 
     unsafe {
@@ -157,13 +188,13 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
             TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON,
             position.x,
             position.y,
-            0,  // reserved param
+            0, // reserved param
             hwnd as HWND,
             std::ptr::null_mut(),
         );
 
         DestroyMenu(menu);
-    
+
         // Post a quit message to exit the message loop
         PostQuitMessage(0);
     }
@@ -179,12 +210,10 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, window:
                 let menu_item_id = LOWORD(msg.wParam as u32);
                 handle_menu_item_click(menu_item_id.into(), window.clone());
             }
-            _ => {
-                unsafe {
-                    TranslateMessage(&msg);
-                    DispatchMessageW(&msg);
-                }
-            }
+            _ => unsafe {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            },
         }
     }
 }

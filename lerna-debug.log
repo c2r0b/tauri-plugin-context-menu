@@ -1,0 +1,55 @@
+0 silly argv {
+0 silly argv   _: [ 'version' ],
+0 silly argv   lernaVersion: '7.4.1',
+0 silly argv   '$0': 'lerna',
+0 silly argv   bump: '0.6.0'
+0 silly argv }
+1 notice cli v7.4.1
+2 verbose packageConfigs Resolving packages based on package.json "workspaces" configuration.
+3 verbose rootPath /home/parallels/Documents/GitHub/tauri-plugin-context-menu
+4 info current version 0.5.0
+5 silly isAnythingCommitted
+6 verbose isAnythingCommitted 1
+7 silly getCurrentBranch
+8 verbose currentBranch dev
+9 silly remoteBranchExists
+10 silly isBehindUpstream
+11 silly isBehindUpstream dev is behind origin/dev by 0 commit(s) and ahead by 1
+12 silly hasTags
+13 verbose hasTags false
+14 info Assuming all packages changed
+15 verbose updated ts-utility-example
+16 verbose updated vanilla-example
+17 verbose updated tauri-plugin-context-menu
+18 info version rooted leaf detected, skipping synthetic root lifecycles
+19 verbose git-describe undefined => "33a906d"
+20 silly git-describe parsed => {"refCount":"51","sha":"33a906d","isDirty":false}
+21 info execute Skipping releases
+22 silly lifecycle No script for "preversion" in "vanilla-example", continuing
+23 silly lifecycle No script for "preversion" in "tauri-plugin-context-menu", continuing
+24 verbose version vanilla-example has no lockfile. Skipping lockfile update.
+25 verbose version tauri-plugin-context-menu has no lockfile. Skipping lockfile update.
+26 silly lifecycle No script for "version" in "tauri-plugin-context-menu", continuing
+27 silly lifecycle No script for "preversion" in "ts-utility-example", continuing
+28 silly lifecycle No script for "version" in "vanilla-example", continuing
+29 verbose version ts-utility-example has no lockfile. Skipping lockfile update.
+30 silly lifecycle No script for "version" in "ts-utility-example", continuing
+31 verbose version Updating root package-lock.json
+32 silly gitAdd [
+32 silly gitAdd   'plugin/package.json',
+32 silly gitAdd   'examples/vanilla/package.json',
+32 silly gitAdd   'examples/ts-utility/package.json',
+32 silly gitAdd   'lerna.json',
+32 silly gitAdd   'package-lock.json'
+32 silly gitAdd ]
+33 error Error: Command failed with exit code 1: git add -- plugin/package.json examples/vanilla/package.json examples/ts-utility/package.json lerna.json package-lock.json
+33 error The following paths are ignored by one of your .gitignore files:
+33 error package-lock.json
+33 error hint: Use -f if you really want to add them.
+33 error hint: Turn this message off by running
+33 error hint: "git config advice.addIgnoredFile false"
+33 error     at makeError (/home/parallels/Documents/GitHub/tauri-plugin-context-menu/node_modules/execa/lib/error.js:59:11)
+33 error     at handlePromise (/home/parallels/Documents/GitHub/tauri-plugin-context-menu/node_modules/execa/index.js:114:26)
+33 error     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+33 error     at async VersionCommand.updatePackageVersions (/home/parallels/Documents/GitHub/tauri-plugin-context-menu/node_modules/lerna/dist/index.js:8331:11)
+33 error     at async Promise.all (index 0)

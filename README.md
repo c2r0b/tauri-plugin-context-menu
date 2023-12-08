@@ -9,8 +9,8 @@ Official context menu support has been added in Tauri v2.x (see [here](https://g
 
 ## Support
 | Windows | MacOS | Linux |
-| ------- | ----- | ------- |
-| ✅      | ✅   | 🔜      |
+| ------- | ----- | ----- |
+| ✅      | ✅    | ✅    |
 
 ## Installation
 Crate: https://crates.io/crates/tauri-plugin-context-menu

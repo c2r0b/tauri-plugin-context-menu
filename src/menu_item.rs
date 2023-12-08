@@ -16,7 +16,7 @@ pub struct MenuItem {
 pub struct MenuItemIcon {
     pub path: String,
     pub width: Option<u32>,
-    pub height: Option<u32>
+    pub height: Option<u32>,
 }
 
 impl Default for MenuItem {

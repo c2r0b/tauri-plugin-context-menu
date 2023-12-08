@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-context-menu"
-version = "0.5.0"
+version = "0.6.0"
 authors = [ "c2r0b" ]
 description = "Handle native Context Menu in Tauri"
 license = "MIT OR Apache-2.0"
@@ -22,3 +22,9 @@ cocoa = "0.24.1"
 objc = "0.2.7"
 libc = "0.2.147"
 dispatch = "0.2.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.15.1"
+gdk = "0.15.1"
+glib = "0.15.1"
+async-std = "1.12.0"
