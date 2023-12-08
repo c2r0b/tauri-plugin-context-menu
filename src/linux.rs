@@ -70,7 +70,7 @@ pub async fn on_context_menu<R:Runtime>(pos:Option<Position>, items:Option<Vec<M
         } else {
             Some(false)
         };
-        if is_absolute.unwrap_or(true) == true {
+        if is_absolute.unwrap_or(true) {
             // Adjust x and y if the coordinates are not relative to the window
             let window_position = window.outer_position().unwrap();
             x -= window_position.x;
@@ -80,7 +80,7 @@ pub async fn on_context_menu<R:Runtime>(pos:Option<Position>, items:Option<Vec<M
         // Show the context menu at the specified position.
         let gdk_window = gtk_window.window().unwrap();
         let rect = &gdk::Rectangle::new(x, y, 0, 0);
-        menu.popup_at_rect(&gdk_window, &rect, gdk::Gravity::NorthWest, gdk::Gravity::NorthWest, None);
+        menu.popup_at_rect(&gdk_window, rect, gdk::Gravity::NorthWest, gdk::Gravity::NorthWest, None);
     }
 }
 
@@ -88,8 +88,8 @@ pub fn show_context_menu<R: Runtime>(_context_menu: Arc<ContextMenu<R>>, app_con
 
     let tx = app_context.tx.lock().unwrap(); // Lock the mutex to access the sender
     tx.send(GtkThreadCommand::ShowContextMenu {
-        pos: pos,
-        items: items,
+        pos,
+        items,
         window: Arc::new(Mutex::new(Box::new(window) as Box<dyn Any + Send>)),
     }).expect("Failed to send command to GTK thread");
 }
@@ -158,7 +158,7 @@ fn append_menu_item<R: Runtime>(window: &Window<R>, gtk_window: &gtk::Applicatio
         if let Some(subitems) = &item.subitems {
             let submenu = Menu::new();
             for subitem in subitems.iter() {
-                append_menu_item(window, &gtk_window, &submenu, subitem);
+                append_menu_item(window, gtk_window, &submenu, subitem);
             }
             menu_item.set_submenu(Some(&submenu));
         }
