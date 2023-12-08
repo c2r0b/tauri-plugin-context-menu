@@ -11,8 +11,6 @@ use crate::{ ContextMenu, MenuItem, Position };
 use crate::macos_window_holder::CURRENT_WINDOW;
 use crate::keymap::{get_key_map, get_modifier_map};
 
-pub struct AppContext {}
-
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
     let window_arc: Arc<tauri::Window<R>> = match CURRENT_WINDOW.get_window() {

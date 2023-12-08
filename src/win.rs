@@ -18,8 +18,6 @@ use crate::{ ContextMenu, MenuItem, Position };
 use crate::win_image_handler::{load_bitmap_from_file, convert_to_hbitmap};
 use crate::keymap::get_key_map;
 
-pub struct AppContext {}
-
 const ID_MENU_ITEM_BASE: u32 = 1000;
 
 // We use a lazy_static Mutex to ensure thread safety.

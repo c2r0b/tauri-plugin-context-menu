@@ -61,13 +61,15 @@ impl<R: Runtime> ContextMenu<R> {
         }
     }
 
+    #[cfg(target_os = "linux")]
     fn show_context_menu(&self, app_context: State<'_, os::AppContext>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
         let context_menu = Arc::new(self.clone());
-
-        #[cfg(target_os = "linux")]
         os::show_context_menu(context_menu, app_context, window, pos, items);
+    }
 
-        #[cfg(any(target_os = "mac", target_os = "windows"))]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    fn show_context_menu(&self, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+        let context_menu = Arc::new(self.clone());
         os::show_context_menu(context_menu, window, pos, items);
     }
 }
@@ -82,12 +84,19 @@ impl<R: Runtime> Plugin<R> for ContextMenu<R> {
     }
 }
 
+#[cfg(target_os = "linux")]
 #[tauri::command]
 fn show_context_menu<R: Runtime>(app_context: State<'_, os::AppContext>, manager: State<'_, ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
     manager.show_context_menu(app_context, window, pos, items);
 }
 
-#[cfg(any(target_os = "mac", target_os = "windows"))]
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[tauri::command]
+fn show_context_menu<R: Runtime>(manager: State<'_, ContextMenu<R>>, window: Window<R>, pos: Option<Position>, items: Option<Vec<MenuItem>>) {
+    manager.show_context_menu(window, pos, items);
+}
+
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("context_menu")
         .invoke_handler(tauri::generate_handler![show_context_menu])
@@ -95,7 +104,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             app.manage(ContextMenu::<R>::default());
             Ok(())
         })
-        .build();
+        .build()
 }
 
 #[cfg(target_os = "linux")]
