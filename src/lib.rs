@@ -5,7 +5,10 @@ use tauri::{
 };
 
 #[cfg(target_os = "linux")]
-use std::{sync::{mpsc, Mutex}, time::Duration};
+use std::{
+    sync::{mpsc, Mutex},
+    time::Duration,
+};
 
 mod menu_item;
 use menu_item::MenuItem;
@@ -141,7 +144,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     let rx = Arc::new(Mutex::new(rx));
 
     let rx = rx.clone();
-    glib::timeout_add_local(Duration::from_millis(200), move || {
+    glib::timeout_add_local(Duration::from_millis(100), move || {
         let rx = rx.lock().unwrap();
         if let Ok(cmd) = rx.try_recv() {
             match cmd {
