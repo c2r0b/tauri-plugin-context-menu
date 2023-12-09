@@ -28,74 +28,86 @@ pub async fn on_context_menu<R: Runtime>(
     items: Option<Vec<MenuItem>>,
     window: Arc<Mutex<Box<dyn Any + Send>>>,
 ) {
-    let window_mutex = window.lock().unwrap();
-    if let Some(window) = window_mutex.downcast_ref::<Window<R>>() {
-        // Create and show the context menu
-        // Create a new menu.
-        let menu = Menu::new();
-        let gtk_window = window.gtk_window().unwrap();
+    let window_clone = window.clone();
 
-        if let Some(menu_items) = items.clone() {
-            for item in menu_items.iter() {
-                append_menu_item(window, &gtk_window, &menu, item);
+    // Delay the display of the context menu to ensure the window is ready
+    glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+        let window_mutex = window_clone.lock().unwrap();
+        if let Some(window) = window_mutex.downcast_ref::<Window<R>>() {
+            // Create and show the context menu
+            // Create a new menu.
+            let menu = Menu::new();
+            let gtk_window = window.gtk_window().unwrap();
+
+            // Check if the window is realized
+            if !gtk_window.is_realized() {
+                gtk_window.realize();
             }
-        }
 
-        let keep_alive = menu.clone();
-        let window_clone = window.clone();
-        menu.connect_hide(clone!(@weak keep_alive => move |_| {
-            window_clone.emit("menu-did-close", ()).unwrap();
-            drop(keep_alive);
-        }));
-
-        let (mut x, mut y) = match pos {
-            Some(ref position) => (position.x as i32, position.y as i32),
-            None => {
-                if let Some(display) = Display::default() {
-                    if let Some(seat) = display.default_seat() {
-                        let pointer = seat.pointer();
-                        let (_screen, x, y) = match pointer {
-                            Some(p) => p.position(),
-                            None => {
-                                eprintln!("Failed to get pointer position");
-                                (display.default_screen(), 0, 0)
-                            }
-                        };
-                        (x, y)
-                    } else {
-                        eprintln!("Failed to get default seat");
-                        (0, 0)
-                    }
-                } else {
-                    eprintln!("Failed to get default display");
-                    (0, 0)
+            if let Some(menu_items) = items.clone() {
+                for item in menu_items.iter() {
+                    append_menu_item(window, &gtk_window, &menu, item);
                 }
             }
-        };
 
-        let is_absolute = if let Some(position) = pos.clone() {
-            position.is_absolute
-        } else {
-            Some(false)
-        };
-        if is_absolute.unwrap_or(true) {
-            // Adjust x and y if the coordinates are not relative to the window
-            let window_position = window.outer_position().unwrap();
-            x -= window_position.x;
-            y -= window_position.y;
+            let keep_alive = menu.clone();
+            let window_clone = window.clone();
+            menu.connect_hide(clone!(@weak keep_alive => move |_| {
+                window_clone.emit("menu-did-close", ()).unwrap();
+                drop(keep_alive);
+            }));
+
+            let (mut x, mut y) = match pos {
+                Some(ref position) => (position.x as i32, position.y as i32),
+                None => {
+                    if let Some(display) = Display::default() {
+                        if let Some(seat) = display.default_seat() {
+                            let pointer = seat.pointer();
+                            let (_screen, x, y) = match pointer {
+                                Some(p) => p.position(),
+                                None => {
+                                    eprintln!("Failed to get pointer position");
+                                    (display.default_screen(), 0, 0)
+                                }
+                            };
+                            (x, y)
+                        } else {
+                            eprintln!("Failed to get default seat");
+                            (0, 0)
+                        }
+                    } else {
+                        eprintln!("Failed to get default display");
+                        (0, 0)
+                    }
+                }
+            };
+
+            let is_absolute = if let Some(position) = pos.clone() {
+                position.is_absolute
+            } else {
+                Some(false)
+            };
+            if is_absolute.unwrap_or(true) {
+                // Adjust x and y if the coordinates are not relative to the window
+                let window_position = window.outer_position().unwrap();
+                x -= window_position.x;
+                y -= window_position.y;
+            }
+
+            // Show the context menu at the specified position.
+            let gdk_window = gtk_window.window().unwrap();
+            let rect = &gdk::Rectangle::new(x, y, 0, 0);
+            menu.popup_at_rect(
+                &gdk_window,
+                rect,
+                gdk::Gravity::NorthWest,
+                gdk::Gravity::NorthWest,
+                None,
+            );
         }
 
-        // Show the context menu at the specified position.
-        let gdk_window = gtk_window.window().unwrap();
-        let rect = &gdk::Rectangle::new(x, y, 0, 0);
-        menu.popup_at_rect(
-            &gdk_window,
-            rect,
-            gdk::Gravity::NorthWest,
-            gdk::Gravity::NorthWest,
-            None,
-        );
-    }
+        glib::Continue(false)
+    });
 }
 
 pub fn show_context_menu<R: Runtime>(
@@ -149,6 +161,7 @@ fn append_menu_item<R: Runtime>(
 
         // Add the Box to the MenuItem
         menu_item.add(&hbox);
+        hbox.show_all();
 
         // Handle enabled/disabled state
         if item.disabled.unwrap_or(false) {
@@ -190,7 +203,6 @@ fn append_menu_item<R: Runtime>(
             menu_item.set_submenu(Some(&submenu));
         }
 
-        hbox.show_all();
         menu.append(&menu_item);
         menu_item.show();
     }
