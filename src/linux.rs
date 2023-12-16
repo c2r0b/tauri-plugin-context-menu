@@ -97,12 +97,20 @@ pub async fn on_context_menu<R: Runtime>(
             // Show the context menu at the specified position.
             let gdk_window = gtk_window.window().unwrap();
             let rect = &gdk::Rectangle::new(x, y, 0, 0);
+            let mut event = gdk::Event::new(gdk::EventType::ButtonPress);
+            event.set_device(
+                gdk_window
+                    .display()
+                    .default_seat()
+                    .and_then(|d| d.pointer())
+                    .as_ref(),
+            );
             menu.popup_at_rect(
                 &gdk_window,
                 rect,
                 gdk::Gravity::NorthWest,
                 gdk::Gravity::NorthWest,
-                None,
+                Some(&event),
             );
         }
 
