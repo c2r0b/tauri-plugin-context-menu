@@ -10,13 +10,13 @@ use winapi::{
         AppendMenuW, ClientToScreen, CreatePopupMenu, DestroyMenu, DispatchMessageW, GetCursorPos,
         GetMessageW, PostQuitMessage, SetMenuItemBitmaps, TrackPopupMenu, TranslateMessage,
         MF_BYCOMMAND, MF_DISABLED, MF_ENABLED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG,
-        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND, WM_HOTKEY,
+        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND,
     },
 };
 
 use crate::keymap::get_key_map;
 use crate::win_image_handler::{convert_to_hbitmap, load_bitmap_from_file};
-use crate::{ContextMenu, MenuItem, Position};
+use crate::{MenuItem, Position};
 
 const ID_MENU_ITEM_BASE: u32 = 1000;
 
@@ -137,7 +137,6 @@ pub fn handle_menu_item_click<R: Runtime>(id: u32, window: Window<R>) {
 }
 
 pub fn show_context_menu<R: Runtime>(
-    _context_menu: Arc<ContextMenu<R>>,
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,

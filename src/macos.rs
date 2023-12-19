@@ -9,7 +9,7 @@ use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_modifier_map};
 use crate::macos_window_holder::CURRENT_WINDOW;
-use crate::{ContextMenu, MenuItem, Position};
+use crate::{MenuItem, Position};
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
@@ -72,7 +72,7 @@ fn register_menu_item_action<R: Runtime>() -> Sel {
     selector(selector_name)
 }
 
-fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &MenuItem) -> id {
+fn create_custom_menu_item<R: Runtime>(option: &MenuItem) -> id {
     // If the item is a separator, return a separator item
     if option.is_separator.unwrap_or(false) {
         let separator: id = unsafe { msg_send![class!(NSMenuItem), separatorItem] };
@@ -167,7 +167,7 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
             let submenu: id = msg_send![class!(NSMenu), new];
             let _: () = msg_send![submenu, setAutoenablesItems:NO];
             for subitem in subitems.iter() {
-                let sub_menu_item: id = create_custom_menu_item(&context_menu, subitem);
+                let sub_menu_item: id = create_custom_menu_item::<R>(subitem);
                 let _: () = msg_send![submenu, addItem:sub_menu_item];
             }
             let _: () = msg_send![item, setSubmenu:submenu];
@@ -179,7 +179,6 @@ fn create_custom_menu_item<R: Runtime>(context_menu: &ContextMenu<R>, option: &M
 }
 
 fn create_context_menu<R: Runtime>(
-    context_menu: &ContextMenu<R>,
     options: &[MenuItem],
     window: &Window<R>,
 ) -> id {
@@ -192,7 +191,7 @@ fn create_context_menu<R: Runtime>(
         let _: () = msg_send![menu, setAutoenablesItems:NO];
 
         for option in options.iter().cloned() {
-            let item: id = create_custom_menu_item(&context_menu, &option);
+            let item: id = create_custom_menu_item::<R>(&option);
             let _: () = msg_send![menu, addItem:item];
         }
 
@@ -207,7 +206,6 @@ fn create_context_menu<R: Runtime>(
 }
 
 pub fn show_context_menu<R: Runtime>(
-    context_menu: Arc<ContextMenu<R>>,
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
@@ -215,7 +213,7 @@ pub fn show_context_menu<R: Runtime>(
     let main_queue = dispatch::Queue::main();
     main_queue.exec_async(move || {
         let items_slice = items.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-        let menu = create_context_menu(&*context_menu, items_slice, &window);
+        let menu = create_context_menu(items_slice, &window);
         let location = match pos {
             // Convert web page coordinates to screen coordinates
             Some(pos) if pos.x != 0.0 || pos.y != 0.0 => unsafe {
