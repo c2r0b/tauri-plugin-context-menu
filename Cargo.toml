@@ -12,6 +12,7 @@ exclude = ["/examples", "/assets", ".DS_Store", "/.github", "/.changes", "/webvi
 tauri = { version = "1.5" }
 serde = { version = "1.0", features = ["derive"] }
 lazy_static = "1.4"
+time = "0.3.28"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }
