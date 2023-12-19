@@ -1,23 +1,10 @@
 use gdk::{keys::Key, Display, ModifierType};
 use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu, MenuItem as GtkMenuItem};
-use std::{any::Any, mem, sync::{mpsc::Sender, Arc, Mutex}, time};
-use std::thread::sleep;
+use std::{mem, thread::sleep, time};
 use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_mod_map};
 use crate::{MenuItem, Position};
-
-pub struct AppContext {
-    pub tx: Arc<Mutex<Sender<GtkThreadCommand>>>,
-}
-
-pub enum GtkThreadCommand {
-    ShowContextMenu {
-        pos: Option<Position>,
-        items: Option<Vec<MenuItem>>,
-        window: Arc<Mutex<Box<dyn Any + Send>>>,
-    },
-}
 
 pub fn on_context_menu<R: Runtime>(
     pos: Option<Position>,
