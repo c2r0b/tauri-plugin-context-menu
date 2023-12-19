@@ -1,15 +1,11 @@
 use gdk::{keys::Key, Display, ModifierType};
-use glib::clone;
 use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu, MenuItem as GtkMenuItem};
-use std::{
-    any::Any,
-    mem,
-    sync::{mpsc::Sender, Arc, Mutex},
-};
-use tauri::{Runtime, State, Window};
+use std::{any::Any, mem, sync::{mpsc::Sender, Arc, Mutex}, time};
+use std::thread::sleep;
+use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_mod_map};
-use crate::{ContextMenu, MenuItem, Position};
+use crate::{MenuItem, Position};
 
 pub struct AppContext {
     pub tx: Arc<Mutex<Sender<GtkThreadCommand>>>,
@@ -23,115 +19,98 @@ pub enum GtkThreadCommand {
     },
 }
 
-pub async fn on_context_menu<R: Runtime>(
+pub fn on_context_menu<R: Runtime>(
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
-    window: Arc<Mutex<Box<dyn Any + Send>>>,
+    window: Window<R>,
 ) {
-    let window_clone = window.clone();
+    // Create and show the context menu
+    let gtk_window = window.gtk_window().unwrap();
+
+    // Check if the window is realized
+    if !gtk_window.is_realized() {
+        gtk_window.realize();
+    }
+
+    // Create a new menu.
+    let menu = Menu::new();
+    if let Some(menu_items) = items {
+        for item in menu_items.iter() {
+            append_menu_item(&window, &gtk_window, &menu, item);
+        }
+    }
+
+    let (mut x, mut y) = match pos {
+        Some(ref position) => (position.x as i32, position.y as i32),
+        None => {
+            if let Some(display) = Display::default() {
+                if let Some(seat) = display.default_seat() {
+                    let pointer = seat.pointer();
+                    let (_screen, x, y) = match pointer {
+                        Some(p) => p.position(),
+                        None => {
+                            eprintln!("Failed to get pointer position");
+                            (display.default_screen(), 0, 0)
+                        }
+                    };
+                    (x, y)
+                } else {
+                    eprintln!("Failed to get default seat");
+                    (0, 0)
+                }
+            } else {
+                eprintln!("Failed to get default display");
+                (0, 0)
+            }
+        }
+    };
+
+    let is_absolute = if let Some(position) = pos.clone() {
+        position.is_absolute
+    } else {
+        Some(false)
+    };
+    if is_absolute.unwrap_or(true) {
+        // Adjust x and y if the coordinates are not relative to the window
+        let window_position = window.outer_position().unwrap();
+        x -= window_position.x;
+        y -= window_position.y;
+    }
+
+    // Required otherwise the menu doesn't show properly
+    sleep(time::Duration::from_millis(100));
 
     // Delay the display of the context menu to ensure the window is ready
-    glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
-        let window_mutex = window_clone.lock().unwrap();
-        if let Some(window) = window_mutex.downcast_ref::<Window<R>>() {
-            // Create and show the context menu
-            // Create a new menu.
-            let menu = Menu::new();
-            let gtk_window = window.gtk_window().unwrap();
-
-            // Check if the window is realized
-            if !gtk_window.is_realized() {
-                gtk_window.realize();
-            }
-
-            if let Some(menu_items) = items.clone() {
-                for item in menu_items.iter() {
-                    append_menu_item(window, &gtk_window, &menu, item);
-                }
-            }
-
-            let keep_alive = menu.clone();
-            let window_clone = window.clone();
-            menu.connect_hide(clone!(@weak keep_alive => move |_| {
-                window_clone.emit("menu-did-close", ()).unwrap();
-                drop(keep_alive);
-            }));
-
-            let (mut x, mut y) = match pos {
-                Some(ref position) => (position.x as i32, position.y as i32),
-                None => {
-                    if let Some(display) = Display::default() {
-                        if let Some(seat) = display.default_seat() {
-                            let pointer = seat.pointer();
-                            let (_screen, x, y) = match pointer {
-                                Some(p) => p.position(),
-                                None => {
-                                    eprintln!("Failed to get pointer position");
-                                    (display.default_screen(), 0, 0)
-                                }
-                            };
-                            (x, y)
-                        } else {
-                            eprintln!("Failed to get default seat");
-                            (0, 0)
-                        }
-                    } else {
-                        eprintln!("Failed to get default display");
-                        (0, 0)
-                    }
-                }
-            };
-
-            let is_absolute = if let Some(position) = pos.clone() {
-                position.is_absolute
-            } else {
-                Some(false)
-            };
-            if is_absolute.unwrap_or(true) {
-                // Adjust x and y if the coordinates are not relative to the window
-                let window_position = window.outer_position().unwrap();
-                x -= window_position.x;
-                y -= window_position.y;
-            }
-
-            // Show the context menu at the specified position.
-            let gdk_window = gtk_window.window().unwrap();
-            let rect = &gdk::Rectangle::new(x, y, 0, 0);
-            let mut event = gdk::Event::new(gdk::EventType::ButtonPress);
-            event.set_device(
-                gdk_window
-                    .display()
-                    .default_seat()
-                    .and_then(|d| d.pointer())
-                    .as_ref(),
-            );
-            menu.popup_at_rect(
-                &gdk_window,
-                rect,
-                gdk::Gravity::NorthWest,
-                gdk::Gravity::NorthWest,
-                Some(&event),
-            );
-        }
-
-        glib::Continue(false)
+    glib::idle_add_local(move || {
+        // Show the context menu at the specified position.
+        let gdk_window = gtk_window.window().unwrap();
+        let rect = &gdk::Rectangle::new(x, y, 0, 0);
+        let mut event = gdk::Event::new(gdk::EventType::ButtonPress);
+        event.set_device(
+            gdk_window
+                .display()
+                .default_seat()
+                .and_then(|d| d.pointer())
+                .as_ref(),
+        );
+        menu.show_all();
+        menu.popup_at_rect(
+            &gdk_window,
+            rect,
+            gdk::Gravity::NorthWest,
+            gdk::Gravity::NorthWest,
+            Some(&event),
+        );
+        Continue(false)
     });
 }
 
 pub fn show_context_menu<R: Runtime>(
-    _context_menu: Arc<ContextMenu<R>>,
-    app_context: State<'_, AppContext>,
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
 ) {
-    let tx = app_context.tx.lock().unwrap(); // Lock the mutex to access the sender
-    tx.send(GtkThreadCommand::ShowContextMenu {
-        pos,
-        items,
-        window: Arc::new(Mutex::new(Box::new(window) as Box<dyn Any + Send>)),
-    })
-    .expect("Failed to send command to GTK thread");
+    on_context_menu(pos, items, window);
 }
 
 fn append_menu_item<R: Runtime>(
@@ -169,7 +148,6 @@ fn append_menu_item<R: Runtime>(
 
         // Add the Box to the MenuItem
         menu_item.add(&hbox);
-        hbox.show_all();
 
         // Handle enabled/disabled state
         if item.disabled.unwrap_or(false) {
@@ -212,7 +190,6 @@ fn append_menu_item<R: Runtime>(
         }
 
         menu.append(&menu_item);
-        menu_item.show();
     }
 }
 
