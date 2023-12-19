@@ -95,7 +95,6 @@ impl<R: Runtime> Plugin<R> for ContextMenu<R> {
     }
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 #[tauri::command]
 fn show_context_menu<R: Runtime>(
     manager: State<'_, ContextMenu<R>>,
@@ -105,8 +104,6 @@ fn show_context_menu<R: Runtime>(
 ) {
     manager.show_context_menu(window, pos, items);
 }
-
-#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("context_menu")
         .invoke_handler(tauri::generate_handler![show_context_menu])
