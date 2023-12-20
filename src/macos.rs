@@ -173,8 +173,16 @@ fn create_custom_menu_item<R: Runtime>(option: &MenuItem) -> id {
             let _: () = msg_send![item, setSubmenu:submenu];
         }
 
+        // Handle checkable menu items
+        let state = match option.checked {
+            Some(true) => 1,
+            _ => 0,
+        };
+        let _: () = msg_send![item, setState:state];
+
         item
     };
+
     menu_item
 }
 
