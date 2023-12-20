@@ -65,6 +65,7 @@ window.addEventListener('contextmenu', (e) => {
                         {
                             label: "My first subitem",
                             event: "my_first_subitem",
+                            checked: true,
                             shortcut: "ctrl+m"
                         },
                         {
