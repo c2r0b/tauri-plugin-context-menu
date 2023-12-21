@@ -1,5 +1,5 @@
 use gdk::{keys::Key, Display, ModifierType};
-use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu, MenuItem as GtkMenuItem};
+use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu};
 use std::{mem, thread::sleep, time};
 use tauri::{Runtime, Window};
 
