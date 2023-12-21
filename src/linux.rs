@@ -109,7 +109,18 @@ fn append_menu_item<R: Runtime>(
     if item.is_separator.unwrap_or(false) {
         menu.append(&gtk::SeparatorMenuItem::builder().visible(true).build());
     } else {
-        let menu_item = GtkMenuItem::new();
+        let menu_item = match item.checked {
+            Some(state) => {
+                // Create a CheckMenuItem for checkable items
+                let check_menu_item = gtk::CheckMenuItem::new();
+                check_menu_item.set_active(state);
+                check_menu_item.upcast()
+            }
+            None => {
+                // Create a regular MenuItem for non-checkable items
+                gtk::MenuItem::new()
+            }
+        };
 
         // Create a Box to hold the image and label
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);

@@ -70,6 +70,7 @@ window.addEventListener('contextmenu', (e) => {
                         },
                         {
                             label: "My second subitem",
+                            checked: false,
                             disabled: true
                         }
                     ]

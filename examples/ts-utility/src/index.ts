@@ -40,6 +40,7 @@ onEventShowMenu('contextmenu', async (_e:MouseEvent) => {
                     },
                     {
                         label: "My second subitem",
+                        checked: false,
                         disabled: true
                     }
                 ]
