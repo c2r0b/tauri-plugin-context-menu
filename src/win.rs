@@ -10,7 +10,7 @@ use winapi::{
         AppendMenuW, ClientToScreen, CreatePopupMenu, DestroyMenu, DispatchMessageW, GetCursorPos,
         GetMessageW, PostQuitMessage, SetMenuItemBitmaps, TrackPopupMenu, TranslateMessage,
         MF_BYCOMMAND, MF_DISABLED, MF_ENABLED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG,
-        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND,
+        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND, MF_CHECKED,
     },
 };
 
@@ -72,6 +72,11 @@ fn append_menu_item(menu: HMENU, item: &MenuItem, counter: &mut u32) -> Result<u
             flags |= MF_DISABLED;
         } else {
             flags |= MF_ENABLED;
+        }
+
+        // Check if the item is checkable and set the initial state
+        if item.checked.unwrap_or(false) {
+            flags |= MF_CHECKED;
         }
 
         if let Some(subitems) = &item.subitems {
