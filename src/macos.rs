@@ -186,10 +186,7 @@ fn create_custom_menu_item<R: Runtime>(option: &MenuItem) -> id {
     menu_item
 }
 
-fn create_context_menu<R: Runtime>(
-    options: &[MenuItem],
-    window: &Window<R>,
-) -> id {
+fn create_context_menu<R: Runtime>(options: &[MenuItem], window: &Window<R>) -> id {
     let _: () = CURRENT_WINDOW.set_window(window.clone());
     unsafe {
         let title = NSString::alloc(nil).init_str("Menu");
