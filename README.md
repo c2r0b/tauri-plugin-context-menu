@@ -81,6 +81,7 @@ window.addEventListener("contextmenu", async (e) => {
                     {
                         label: "Subitem 2",
                         disabled: false,
+                        checked: true,
                         event: "subitem2clicked",
                     }
                 ]
@@ -127,6 +128,7 @@ List of options that can be passed to the plugin.
 | disabled | `boolean` | `optional` |  `false` | Whether the menu item is disabled. |
 | event | `string` | `optional` | | Event name to be emitted when the menu item is clicked. | You can pass a function to be executed instead of an event name. |
 | payload | `string` | `optional` | | Payload to be passed to the event. | You can pass any type of data. |
+| checked | `boolean` | `optional` | | Whether the menu item is checked. |
 | subitems | `MenuItem[]` | `optional` |  `[]` | List of sub menu items to be displayed. |
 | shortcut | `string` | `optional` | | Keyboard shortcut displayed on the right. |
 | icon | `MenuItemIcon` | `optional` | | Icon to be displayed on the left. |
