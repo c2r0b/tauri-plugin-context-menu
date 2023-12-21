@@ -9,6 +9,7 @@ pub struct MenuItem {
     pub payload: Option<String>,
     pub subitems: Option<Vec<MenuItem>>,
     pub icon: Option<MenuItemIcon>,
+    pub checked: Option<bool>,
     pub is_separator: Option<bool>,
 }
 
@@ -29,6 +30,7 @@ impl Default for MenuItem {
             payload: None,
             subitems: None,
             icon: None,
+            checked: Some(false),
             is_separator: Some(false),
         }
     }

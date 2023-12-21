@@ -32,6 +32,7 @@ onEventShowMenu('contextmenu', async (_e:MouseEvent) => {
                 subitems: [
                     {
                         label: "My first subitem",
+                        checked: true,
                         event: () => {
                             alert('My first subitem clicked');
                         },
@@ -39,6 +40,7 @@ onEventShowMenu('contextmenu', async (_e:MouseEvent) => {
                     },
                     {
                         label: "My second subitem",
+                        checked: false,
                         disabled: true
                     }
                 ]
