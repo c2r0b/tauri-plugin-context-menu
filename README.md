@@ -3,7 +3,7 @@
 A Tauri plugin to display native context menu on Tauri v1.x.
 The Tauri API does not support native context menu out of the box, so this plugin is created to fill the gap.
 
-![Screenshot](./assets/screenshot.png)
+<img src="./assets/screenshot.png" alt="image" width="400" height="auto">
 
 Official context menu support has been added in Tauri v2.x (see [here](https://github.com/tauri-apps/tauri/issues/4338)), so this plugin is intended to be used with Tauri v1.x only.
 
