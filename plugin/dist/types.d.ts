@@ -18,6 +18,7 @@ export interface Item {
     is_separator?: boolean;
     event?: string | ((e?: CallbackEvent) => any);
     payload?: any;
+    checked?: boolean;
     shortcut?: string;
     icon?: Icon;
     subitems?: Item[];
