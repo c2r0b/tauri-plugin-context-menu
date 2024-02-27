@@ -1,6 +1,6 @@
 use gdk::{keys::Key, Display, ModifierType};
 use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu};
-use std::{mem, thread::sleep, time, env};
+use std::{env, mem, thread::sleep, time};
 use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_mod_map};
