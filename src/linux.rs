@@ -81,7 +81,7 @@ pub fn on_context_menu<R: Runtime>(
     } else {
         Some(false)
     };
-    if is_absolute.unwrap_or(false) {
+    if is_absolute.unwrap_or(false) || !pos.is_some() {
         // Adjust x and y if the coordinates are not relative to the window
         let window_position = window.outer_position().unwrap();
         x -= window_position.x;
