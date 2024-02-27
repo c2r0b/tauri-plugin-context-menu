@@ -1,6 +1,6 @@
 use gdk::{keys::Key, Display, ModifierType};
 use gtk::{prelude::*, traits::WidgetExt, AccelFlags, AccelGroup, Menu};
-use std::{mem, thread::sleep, time};
+use std::{env, mem, thread::sleep, time};
 use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_mod_map};
@@ -52,12 +52,36 @@ pub fn on_context_menu<R: Runtime>(
         }
     };
 
+    // Adjust for X11 backend
+    let is_x11 = env::var("GDK_BACKEND").map_or(false, |v| v == "x11");
+
+    if is_x11 {
+        // Get the display and the default seat
+        let display = gdk::Display::default().expect("Failed to get default display");
+        let gdk_window = gtk_window.window().unwrap();
+
+        // Identify the monitor where the window is displayed
+        let monitor = display
+            .monitor_at_window(&gdk_window)
+            .expect("Failed to get monitor at window");
+
+        // Get the scale factor for the monitor
+        let scale_factor = monitor.scale_factor();
+
+        // Get the geometry of the monitor
+        let monitor_geometry = monitor.geometry();
+
+        // Adjust `x` and `y` based on the monitor's geometry and scale factor
+        x = (x + monitor_geometry.x()) * scale_factor;
+        y = (y + monitor_geometry.y()) * scale_factor;
+    }
+
     let is_absolute = if let Some(position) = pos.clone() {
         position.is_absolute
     } else {
         Some(false)
     };
-    if is_absolute.unwrap_or(true) {
+    if is_absolute.unwrap_or(false) || pos.is_none() {
         // Adjust x and y if the coordinates are not relative to the window
         let window_position = window.outer_position().unwrap();
         x -= window_position.x;
