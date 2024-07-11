@@ -10,7 +10,7 @@ Official context menu support has been added in Tauri v2.x (see [here](https://g
 ## Support
 | Windows | MacOS | Linux |
 | ------- | ----- | ----- |
-| ✅      | ✅    | ✅    |
+| ✅       | ✅     | ✅     |
 
 ## Installation
 Crate: https://crates.io/crates/tauri-plugin-context-menu
@@ -96,7 +96,8 @@ window.addEventListener("contextmenu", async (e) => {
 import { showMenu } from "tauri-plugin-context-menu";
 
 showMenu({ 
-    pos: {...} // Position of the menu (see below for options)
+    pos: {...}, // Position of the menu (see below for options)
+    theme: "light", // Theme of the menu
     items: [
         ...,
         {
@@ -116,39 +117,40 @@ onEventShowMenu("contextmenu", (e) => ({ /* menuOptions */ }));
 
 ## Options
 List of options that can be passed to the plugin.
-| Option | Type | Description |
-| ------ | ---- | ----------- |
-| items | `MenuItem[]` | List of menu items to be displayed. |
-| pos | `Position` | Position of the menu. Defaults to the cursor position. |
+| Option | Type              | Optional   | Description                                            |
+| ------ | ----------------- | ---------- | ------------------------------------------------------ |
+| items  | `MenuItem[]`      |            | List of menu items to be displayed.                    |
+| pos    | `Position`        | `optional` | Position of the menu. Defaults to the cursor position. |
+| theme  | `light` \| `dark` | `optional` | Theme of the menu. Defaults to system theme.           |
 
 ### MenuItem
-| Option | Type | Optional | Default | Description | JS/TS pkg |
-| ------ | ---- |---- |---- | ----------- | ----------- |
-| label | `string` | | | Displayed test of the menu item. ||
-| disabled | `boolean` | `optional` |  `false` | Whether the menu item is disabled. |
-| event | `string` | `optional` | | Event name to be emitted when the menu item is clicked. | You can pass a function to be executed instead of an event name. |
-| payload | `string` | `optional` | | Payload to be passed to the event. | You can pass any type of data. |
-| checked | `boolean` | `optional` | | Whether the menu item is checked. |
-| subitems | `MenuItem[]` | `optional` |  `[]` | List of sub menu items to be displayed. |
-| shortcut | `string` | `optional` | | Keyboard shortcut displayed on the right. |
-| icon | `MenuItemIcon` | `optional` | | Icon to be displayed on the left. |
-| is_separator | `boolean` | `optional` | `false` | Whether the menu item is a separator. |
+| Option       | Type           | Optional   | Default | Description                                             | JS/TS pkg                                                        |
+| ------------ | -------------- | ---------- | ------- | ------------------------------------------------------- | ---------------------------------------------------------------- |
+| label        | `string`       |            |         | Displayed test of the menu item.                        |                                                                  |
+| disabled     | `boolean`      | `optional` | `false` | Whether the menu item is disabled.                      |
+| event        | `string`       | `optional` |         | Event name to be emitted when the menu item is clicked. | You can pass a function to be executed instead of an event name. |
+| payload      | `string`       | `optional` |         | Payload to be passed to the event.                      | You can pass any type of data.                                   |
+| checked      | `boolean`      | `optional` |         | Whether the menu item is checked.                       |
+| subitems     | `MenuItem[]`   | `optional` | `[]`    | List of sub menu items to be displayed.                 |
+| shortcut     | `string`       | `optional` |         | Keyboard shortcut displayed on the right.               |
+| icon         | `MenuItemIcon` | `optional` |         | Icon to be displayed on the left.                       |
+| is_separator | `boolean`      | `optional` | `false` | Whether the menu item is a separator.                   |
 
 
 ### MenuItemIcon
-| Option | Type | Optional | Default | Description | JS/TS pkg |
-| ------ | ---- |---- |---- | ----------- | ----------- |
-| path | `string` | | | Absolute path to the icon file. | You can use `assetToPath` to convert a relative path to an absolute path. |
-| width | `number` | `optional` | `16` | Width of the icon. |
-| height | `number` | `optional` | `16` | Height of the icon. |
+| Option | Type     | Optional   | Default | Description                     | JS/TS pkg                                                                 |
+| ------ | -------- | ---------- | ------- | ------------------------------- | ------------------------------------------------------------------------- |
+| path   | `string` |            |         | Absolute path to the icon file. | You can use `assetToPath` to convert a relative path to an absolute path. |
+| width  | `number` | `optional` | `16`    | Width of the icon.              |
+| height | `number` | `optional` | `16`    | Height of the icon.             |
 
 ### Position
 Position coordinates must be relative to the currently active window when `is_absolute` is set to `false`.
-| Option | Type | Optional | Default | Description |
-| ------ | ---- |---- |---- | ----------- |
-| x | `number` | | | X position of the menu. |
-| y | `number` | | | Y position of the menu. |
-| is_absolute | `boolean` |`optional` | `false` |  Is the position absolute to the screen. |
+| Option      | Type      | Optional   | Default | Description                             |
+| ----------- | --------- | ---------- | ------- | --------------------------------------- |
+| x           | `number`  |            |         | X position of the menu.                 |
+| y           | `number`  |            |         | Y position of the menu.                 |
+| is_absolute | `boolean` | `optional` | `false` | Is the position absolute to the screen. |
 
 ### Modifier Keys
 Modifier keys can be used in the `shortcut` option of a menu item to display the corresponding symbol (`⌘`, `⌃`, `⌥`, `⇧`).

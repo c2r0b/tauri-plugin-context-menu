@@ -2,6 +2,7 @@ import { assetToPath, onEventShowMenu } from 'tauri-plugin-context-menu';
 
 onEventShowMenu('contextmenu', async (_e:MouseEvent) => {
     const options = {
+        theme: 'dark',
         items: [
             {
                 label: "My first item",

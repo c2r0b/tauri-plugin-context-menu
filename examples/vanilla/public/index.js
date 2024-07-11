@@ -36,6 +36,7 @@ window.addEventListener('contextmenu', (e) => {
                 x: e.clientX,
                 y: e.clientY
             },
+            theme: 'light',
             items: [
                 {
                     label: "My first item",
