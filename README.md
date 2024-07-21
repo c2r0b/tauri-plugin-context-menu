@@ -117,11 +117,11 @@ onEventShowMenu("contextmenu", (e) => ({ /* menuOptions */ }));
 
 ## Options
 List of options that can be passed to the plugin.
-| Option | Type              | Optional   | Description                                            |
-| ------ | ----------------- | ---------- | ------------------------------------------------------ |
-| items  | `MenuItem[]`      |            | List of menu items to be displayed.                    |
-| pos    | `Position`        | `optional` | Position of the menu. Defaults to the cursor position. |
-| theme  | `light` \| `dark` | `optional` | Theme of the menu. Defaults to system theme.           |
+| Option | Type              | Optional   | Description                                            | OS compatibility                                                               |
+| ------ | ----------------- | ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| items  | `MenuItem[]`      |            | List of menu items to be displayed.                    | All                                                                            |
+| pos    | `Position`        | `optional` | Position of the menu. Defaults to the cursor position. | All                                                                            |
+| theme  | `light` \| `dark` | `optional` | Theme of the menu. Defaults to system theme.           | MacOS only [#25](https://github.com/c2r0b/tauri-plugin-context-menu/issues/25) |
 
 ### MenuItem
 | Option       | Type           | Optional   | Default | Description                                             | JS/TS pkg                                                        |

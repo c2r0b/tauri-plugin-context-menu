@@ -4,6 +4,7 @@ use std::{env, mem, thread::sleep, time};
 use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_mod_map};
+use crate::theme::Theme;
 use crate::{MenuItem, Position};
 
 pub fn on_context_menu<R: Runtime>(
@@ -120,6 +121,7 @@ pub fn show_context_menu<R: Runtime>(
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
+    _theme: Option<Theme>,
 ) {
     on_context_menu(pos, items, window);
 }
