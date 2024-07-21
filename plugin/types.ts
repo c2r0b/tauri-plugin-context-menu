@@ -28,8 +28,11 @@ export interface Item {
     subitems?: Item[]
 }
 
+export type Theme = 'light' | 'dark'
+
 export interface Options {
     pos?: Position
+    theme?: Theme
     items: Item[]
 }
 

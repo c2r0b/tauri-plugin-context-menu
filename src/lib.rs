@@ -1,11 +1,12 @@
 use serde::Deserialize;
 use tauri::{plugin::Builder, plugin::TauriPlugin, Runtime, Window};
 
+mod keymap;
 mod menu_item;
+mod theme;
 
 use menu_item::MenuItem;
-
-mod keymap;
+use theme::Theme;
 
 #[cfg(target_os = "windows")]
 mod win_image_handler;
@@ -37,8 +38,10 @@ fn show_context_menu<R: Runtime>(
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
+    theme: Option<String>,
 ) {
-    os::show_context_menu(window, pos, items);
+    let theme = theme.and_then(|s| Theme::from_str(&s));
+    os::show_context_menu(window, pos, items, theme);
 }
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("context_menu")

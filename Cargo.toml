@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-context-menu"
-version = "0.7.1"
+version = "0.8.0"
 authors = [ "c2r0b" ]
 description = "Handle native Context Menu in Tauri"
 license = "MIT OR Apache-2.0"
@@ -9,7 +9,7 @@ rust-version = "1.59"
 exclude = ["/examples", "/assets", ".DS_Store", "/.github", "/.changes", "/webview-dist", "/webview-src", "package.json", "package-lock.json"]
 
 [dependencies]
-tauri = { version = "1.5" }
+tauri = { version = "1.7" }
 serde = { version = "1.0", features = ["derive"] }
 lazy_static = "1.4"
 time = "0.3.28"

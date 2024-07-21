@@ -15,6 +15,7 @@ use winapi::{
 };
 
 use crate::keymap::get_key_map;
+use crate::theme::Theme;
 use crate::win_image_handler::{convert_to_hbitmap, load_bitmap_from_file};
 use crate::{MenuItem, Position};
 
@@ -145,6 +146,7 @@ pub fn show_context_menu<R: Runtime>(
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
+    _theme: Option<Theme>,
 ) {
     // Clear the callback map at the start of each context menu display
     CALLBACK_MAP.lock().unwrap().clear();

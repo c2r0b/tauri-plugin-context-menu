@@ -9,6 +9,7 @@ use tauri::{Runtime, Window};
 
 use crate::keymap::{get_key_map, get_modifier_map};
 use crate::macos_window_holder::CURRENT_WINDOW;
+use crate::theme::Theme;
 use crate::{MenuItem, Position};
 
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
@@ -186,12 +187,27 @@ fn create_custom_menu_item<R: Runtime>(option: &MenuItem) -> id {
     menu_item
 }
 
-fn create_context_menu<R: Runtime>(options: &[MenuItem], window: &Window<R>) -> id {
+fn create_context_menu<R: Runtime>(
+    options: &[MenuItem],
+    window: &Window<R>,
+    theme: Option<Theme>,
+) -> id {
     let _: () = CURRENT_WINDOW.set_window(window.clone());
     unsafe {
         let title = NSString::alloc(nil).init_str("Menu");
         let menu: id = msg_send![class!(NSMenu), alloc];
         let menu: id = msg_send![menu, initWithTitle: title];
+
+        // Set the theme menu
+        if let Some(theme) = theme {
+            let appearance_name: id = match theme {
+                Theme::Dark => NSString::alloc(nil).init_str("NSAppearanceNameDarkAqua"),
+                Theme::Light => NSString::alloc(nil).init_str("NSAppearanceNameAqua"),
+            };
+
+            let appearance: id = msg_send![class!(NSAppearance), appearanceNamed:appearance_name];
+            let _: () = msg_send![menu, setAppearance: appearance];
+        }
 
         let _: () = msg_send![menu, setAutoenablesItems:NO];
 
@@ -214,11 +230,12 @@ pub fn show_context_menu<R: Runtime>(
     window: Window<R>,
     pos: Option<Position>,
     items: Option<Vec<MenuItem>>,
+    theme: Option<Theme>,
 ) {
     let main_queue = dispatch::Queue::main();
     main_queue.exec_async(move || {
         let items_slice = items.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-        let menu = create_context_menu(items_slice, &window);
+        let menu = create_context_menu(items_slice, &window, theme);
         let location = match pos {
             // Convert web page coordinates to screen coordinates
             Some(pos) if pos.x != 0.0 || pos.y != 0.0 => unsafe {
