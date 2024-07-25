@@ -6,6 +6,7 @@
   "homepage": "https://github.com/c2r0b/tauri-plugin-context-menu",
   "scripts": {
     "examples/vanilla": "npm run tauri dev --workspace examples/vanilla",
+    "examples/multi": "npm run tauri dev --workspace examples/multi",
     "examples/ts-utility": "npm run tauri dev --workspace examples/ts-utility"
   },
   "repository": {
@@ -22,6 +23,7 @@
   "workspaces": [
     "plugin",
     "examples/vanilla",
+    "examples/multi",
     "examples/ts-utility"
   ]
 }

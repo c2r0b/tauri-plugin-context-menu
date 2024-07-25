@@ -1,0 +1,14 @@
+{
+  "name": "multi-example",
+  "version": "0.8.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tauri": "tauri"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@tauri-apps/cli": "^1.5.0"
+  }
+}

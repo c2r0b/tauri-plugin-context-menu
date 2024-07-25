@@ -31,7 +31,9 @@ This project provides a typescript utility to simplify the usage of the plugin. 
  npm i tauri-plugin-context-menu
 ```
 
-## Run Example
+## Examples
+Check out the `examples` directory for sample usages.
+
 A vanilla JS example is provided in `examples/vanilla`.  
 After `npm install`, to run the example use the following command:
 
@@ -39,7 +41,8 @@ After `npm install`, to run the example use the following command:
 npm run examples/vanilla
 ```
 
-A typescript example using the utility package is provided in `examples/ts-utility` instead. You can run it with the same command as above (replace `examples/vanilla` with `examples/ts-utility`).
+A typescript example using the utility package is provided in `examples/ts-utility`.
+You can run it with the same command as above (replace `examples/vanilla` with `examples/ts-utility`).
 
 ## Sample Usage
 ### Without the JS/TS Package
