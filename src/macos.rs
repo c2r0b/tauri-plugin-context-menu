@@ -12,6 +12,10 @@ use crate::macos_window_holder::CURRENT_WINDOW;
 use crate::theme::Theme;
 use crate::{MenuItem, Position};
 
+extern "C" {
+    fn NSPointInRect(aPoint: NSPoint, aRect: NSRect) -> bool;
+}
+
 extern "C" fn menu_item_action<R: Runtime>(_self: &Object, _cmd: Sel, _item: id) {
     // Get the window from the CURRENT_WINDOW static
     let window_arc: Arc<tauri::Window<R>> = match CURRENT_WINDOW.get_window() {
@@ -240,20 +244,49 @@ pub fn show_context_menu<R: Runtime>(
             // Convert web page coordinates to screen coordinates
             Some(pos) if pos.x != 0.0 || pos.y != 0.0 => unsafe {
                 let window_position = window.outer_position().unwrap();
-                let screen: id = msg_send![class!(NSScreen), mainScreen];
-                let frame: NSRect = msg_send![screen, frame];
-                let screen_height = frame.size.height;
+
+                // Get all screens and the mouse location
+                let screens: id = msg_send![class!(NSScreen), screens];
+                let screen_count: usize = msg_send![screens, count];
+                let mouse_location: NSPoint = msg_send![class!(NSEvent), mouseLocation];
+
+                // Find the screen under the mouse cursor
+                let mut target_screen: id = nil;
+                let mut target_screen_frame: NSRect =
+                    NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(0.0, 0.0));
+
+                for i in 0..screen_count {
+                    let screen: id = msg_send![screens, objectAtIndex:i];
+                    let frame: NSRect = msg_send![screen, frame];
+                    if NSPointInRect(mouse_location, frame) {
+                        target_screen = screen;
+                        target_screen_frame = frame;
+                        break;
+                    }
+                }
+
+                // Fallback to the main screen if no specific screen found
+                if target_screen == nil {
+                    target_screen = msg_send![class!(NSScreen), mainScreen];
+                    target_screen_frame = msg_send![target_screen, frame];
+                }
+
+                let screen_height = target_screen_frame.size.height;
+                let screen_origin_y = target_screen_frame.origin.y;
                 let scale_factor = match window.scale_factor() {
                     Ok(factor) => factor,
-                    Err(_) => 1.0, // Use a default value if getting the scale factor fails
+                    Err(_) => 1.0, // Default to 1.0 if scale factor can't be retrieved
                 };
+
                 if pos.is_absolute.unwrap_or(false) {
                     let x = pos.x;
-                    let y = screen_height - pos.y;
+                    let y = screen_origin_y + screen_height - pos.y;
                     NSPoint::new(x, y)
                 } else {
                     let x = pos.x + (window_position.x as f64 / scale_factor);
-                    let y = screen_height - (window_position.y as f64 / scale_factor) - pos.y;
+                    let y = screen_origin_y + screen_height
+                        - (window_position.y as f64 / scale_factor)
+                        - pos.y;
                     NSPoint::new(x, y)
                 }
             },
