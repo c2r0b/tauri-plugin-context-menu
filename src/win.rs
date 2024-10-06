@@ -10,7 +10,7 @@ use winapi::{
         AppendMenuW, ClientToScreen, CreatePopupMenu, DestroyMenu, DispatchMessageW, GetCursorPos,
         GetMessageW, PostQuitMessage, SetMenuItemBitmaps, TrackPopupMenu, TranslateMessage,
         MF_BYCOMMAND, MF_CHECKED, MF_DISABLED, MF_ENABLED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG,
-        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND,
+        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND, WM_ACTIVATE
     },
 };
 
@@ -20,6 +20,7 @@ use crate::win_image_handler::{convert_to_hbitmap, load_bitmap_from_file};
 use crate::{MenuItem, Position};
 
 const ID_MENU_ITEM_BASE: u32 = 1000;
+const WA_INACTIVE: u16 = 0;
 
 // We use a lazy_static Mutex to ensure thread safety.
 // This will store a map from menu item IDs to events.
@@ -215,6 +216,11 @@ pub fn show_context_menu<R: Runtime>(
                 // Extract the menu item ID from wParam
                 let menu_item_id = LOWORD(msg.wParam as u32);
                 handle_menu_item_click(menu_item_id.into(), window.clone());
+            }
+            WM_ACTIVATE => {
+                if LOWORD(msg.wParam as u32) == WA_INACTIVE {
+                    unsafe { DestroyMenu(menu) };
+                }
             }
             _ => unsafe {
                 TranslateMessage(&msg);
