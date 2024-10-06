@@ -10,7 +10,7 @@ use winapi::{
         AppendMenuW, ClientToScreen, CreatePopupMenu, DestroyMenu, DispatchMessageW, GetCursorPos,
         GetMessageW, PostQuitMessage, SetMenuItemBitmaps, TrackPopupMenu, TranslateMessage,
         MF_BYCOMMAND, MF_CHECKED, MF_DISABLED, MF_ENABLED, MF_POPUP, MF_SEPARATOR, MF_STRING, MSG,
-        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_COMMAND, WM_ACTIVATE
+        TPM_LEFTALIGN, TPM_RIGHTBUTTON, TPM_TOPALIGN, WM_ACTIVATE, WM_COMMAND,
     },
 };
 
