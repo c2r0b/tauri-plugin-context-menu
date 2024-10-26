@@ -1,11 +1,16 @@
 # Tauri Plugin Context Menu
 
-A Tauri plugin to display native context menu on Tauri v1.x.
-The Tauri API does not support native context menu out of the box, so this plugin is created to fill the gap.
+A Tauri plugin to display native context menu in Tauri v1.x.  
+The Tauri API v1 does not support native context menu out of the box, so this plugin is created to fill the gap.
 
 <img src="./assets/screenshot.png" alt="image" width="400" height="auto">
 
-Official context menu support has been added in Tauri v2.x (see [here](https://github.com/tauri-apps/tauri/issues/4338)), so this plugin is intended to be used with Tauri v1.x only.
+⚠️ **Maintenance Mode with Community Contributions** ⚠️  
+
+Tauri v2 [has been released](https://tauri.app/blog/tauri-20/) and it supports creating native context menu without the need of plugins ([here the docs](https://v2.tauri.app/reference/javascript/api/namespacemenu/)).  
+
+Bug fixes will still be implemented for this plugin.  
+New features will not be developed by the main maintainer, but PRs from the community are still welcome.
 
 ## Support
 | Windows | MacOS | Linux |
