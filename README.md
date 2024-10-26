@@ -1,4 +1,4 @@
-# Tauri Plugin Context Menu
+# Tauri v1 Plugin Context Menu
 
 A Tauri plugin to display native context menu in Tauri v1.x.  
 The Tauri API v1 does not support native context menu out of the box, so this plugin is created to fill the gap.
