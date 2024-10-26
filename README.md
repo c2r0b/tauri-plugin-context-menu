@@ -7,7 +7,7 @@ The Tauri API v1 does not support native context menu out of the box, so this pl
 
 ⚠️ **Maintenance Mode with Community Contributions** ⚠️  
 
-Tauri v2 [has been released](https://tauri.app/blog/tauri-20/) and it supports creating native context menu without the need of plugins ([here the docs](https://v2.tauri.app/reference/javascript/api/namespacemenu/)).  
+Tauri v2 [has been released](https://tauri.app/blog/tauri-20/) and it supports creating native context menu without plugins ([here the docs](https://v2.tauri.app/reference/javascript/api/namespacemenu/)).  
 
 Bug fixes will still be implemented for this plugin.  
 New features will not be developed by the main maintainer, but PRs from the community are still welcome.
